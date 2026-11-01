@@ -1,0 +1,2224 @@
+<title>Frameless Cabinet Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one shop-sheet column. Elevation first, the cabinet list under it, then tabbed outputs: cut list, sheet layouts, hardware, construction rules. */
+:root{
+  --paper:#EDF0F1; --panel:#FFFFFF; --ink:#172026; --muted:#56656D; --line:#D2D9DC; --line-strong:#AEBAC0;
+  --accent:#1F5E8C; --accent-ink:#FFFFFF; --accent-soft:#E0EBF3;
+  --maple:#EDD3A6; --maple-edge:#A9824C; --grain:#C9A36A; --maple-ink:#3B2C17;
+  --box-face:#CDB48C; --kick:#363B3F; --counter:#8A959A; --pull:#111111;
+  --waste:#DDE3E5; --hatch:#C3CCD0;
+  --steel:#C3CACE; --steel-2:#9AA4A9; --steel-edge:#6F7A80; --glass:#2A3034; --knob:#2A3034;
+  --warn:#8F5400; --warn-soft:#FBEFD9; --bad:#B3261E; --bad-soft:#FBE3E1;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11161A; --panel:#192025; --ink:#E3E8EA; --muted:#97A5AC; --line:#2B353B; --line-strong:#404C53;
+    --accent:#7DB5E2; --accent-ink:#0B1A26; --accent-soft:#1C3142;
+    --maple:#D9BD8E; --maple-edge:#8F6E3F; --grain:#B8955F; --maple-ink:#2E2212;
+    --box-face:#7E6B4F; --kick:#05080A; --counter:#5C676C; --pull:#0A0A0A;
+    --waste:#20292E; --hatch:#2E393F; --steel:#8C979C; --steel-2:#6C767B; --steel-edge:#4A5459; --glass:#14191C; --knob:#14191C;
+    --warn:#F0B45A; --warn-soft:#382912; --bad:#F2867E; --bad-soft:#3B1C1A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11161A; --panel:#192025; --ink:#E3E8EA; --muted:#97A5AC; --line:#2B353B; --line-strong:#404C53;
+  --accent:#7DB5E2; --accent-ink:#0B1A26; --accent-soft:#1C3142;
+  --maple:#D9BD8E; --maple-edge:#8F6E3F; --grain:#B8955F; --maple-ink:#2E2212;
+  --box-face:#7E6B4F; --kick:#05080A; --counter:#5C676C; --pull:#0A0A0A;
+  --waste:#20292E; --hatch:#2E393F; --steel:#8C979C; --steel-2:#6C767B; --steel-edge:#4A5459; --glass:#14191C; --knob:#14191C;
+  --warn:#F0B45A; --warn-soft:#382912; --bad:#F2867E; --bad-soft:#3B1C1A;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1320px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:2.6rem;font-weight:700;line-height:1;text-transform:uppercase}
+h2{font-size:1.45rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+h3{font-size:1.15rem;font-weight:600}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between}
+.title{display:grid;gap:6px;min-width:0}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 11px;display:grid;gap:1px;min-width:0}
+.stat b{font-family:var(--f-mono);font-size:1.05rem;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat.bad{border-color:var(--bad);background:var(--bad-soft)}
+button.stat{font:inherit;color:inherit;text-align:left;cursor:pointer}
+button.stat:hover{filter:brightness(1.05)}
+.stat.bad b{color:var(--bad)}
+
+.mats{display:grid;gap:10px}
+.mats-head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;cursor:pointer;list-style:none}
+.mats-head::-webkit-details-marker{display:none}
+.mats-head h2::before{content:"▾ ";color:var(--muted)}
+details.mats:not([open]) .mats-head h2::before{content:"▸ "}
+#matsTotal{color:var(--accent);font-size:1.05rem}
+details.mats[open] > .mats-groups{margin-top:10px}
+.mats-groups{display:grid;gap:14px}
+.mgroup{display:grid;gap:6px}
+.mgroup h3{font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.mbox .sub{font-size:.72rem;color:var(--muted);font-family:var(--f-mono)}
+.mats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,168px),1fr));gap:8px}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 11px;display:grid;gap:3px;align-content:start;min-width:0}
+.mbox .cnt{font-family:var(--f-mono);font-size:1.05rem;font-weight:600;font-variant-numeric:tabular-nums}
+.mbox .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.mbox .price{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.mbox .price input{width:5.6em;font-family:var(--f-mono);font-size:.85rem;padding:2px 5px;border:1px solid var(--line-strong);border-radius:4px;background:var(--paper);color:var(--ink)}
+.mbox .price input[aria-invalid="true"]{border-color:var(--bad);background:var(--bad-soft)}
+.mbox .cost{font-family:var(--f-mono);font-weight:600;font-size:.95rem;color:var(--accent);border-top:1px dashed var(--line);padding-top:4px}
+.mbox.total{border-color:var(--accent);background:var(--accent-soft)}
+.crows{display:grid;grid-template-columns:auto auto;justify-content:space-between;gap:1px 8px;font-family:var(--f-mono);font-size:.8rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:4px;font-variant-numeric:tabular-nums}
+.crows span:nth-child(even){text-align:right}
+.crows .tot{color:var(--accent);font-weight:600;font-size:.95rem}
+.mbox.total .crows .tot{font-size:1.15rem}
+.mbox.total .cost{font-size:1.2rem;border-top:0;padding-top:0}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line-strong);background:var(--panel);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn.small{padding:4px 9px;font-size:.85rem}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.scroll{overflow-x:auto;min-width:0}
+
+.banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:9px 12px}
+.banner p{margin:0;flex:1 1 280px}
+
+/* elevation */
+#elev svg{display:block;width:100%;height:auto}
+.e-floor{stroke:var(--ink);stroke-width:.35}
+.e-kick{fill:var(--kick)}
+.e-box{fill:var(--box-face);stroke:var(--maple-edge);stroke-width:.15}
+.e-front{stroke:var(--maple-edge);stroke-width:.18}
+.e-counter{fill:var(--counter)}
+.e-pull{fill:var(--pull)}
+.e-label{fill:var(--ink);font-family:var(--f-mono);font-size:2.6px;font-weight:600;text-anchor:middle}
+.e-sub{fill:var(--muted);font-family:var(--f-mono);font-size:2.1px;text-anchor:middle}
+.e-tick{stroke:var(--line-strong);stroke-width:.15;stroke-dasharray:.8 .8}
+.e-ticklabel{fill:var(--muted);font-family:var(--f-mono);font-size:2px;text-anchor:end}
+.g-bg{fill:var(--maple)}
+.e-steel{fill:var(--steel);stroke:var(--steel-edge);stroke-width:.2}
+.e-steel2{fill:var(--steel-2);stroke:var(--steel-edge);stroke-width:.15}
+.e-glass{fill:var(--glass)}
+.e-knob{fill:var(--knob)}
+.e-handle{fill:var(--steel-edge)}
+.e-faucet{fill:none;stroke:var(--steel-edge);stroke-width:.8;stroke-linecap:round;stroke-linejoin:round}
+.e-inner{fill:var(--maple-edge);opacity:.4}
+.e-shelf{fill:var(--maple);stroke:var(--maple-edge);stroke-width:.12}
+.e-appltext{fill:var(--ink);font-family:var(--f-mono);font-size:2px;font-weight:600;text-anchor:middle}
+.e-window{fill:var(--accent-soft);stroke:var(--accent);stroke-width:.3}
+.e-wintext{fill:var(--accent);font-family:var(--f-mono);font-size:2.2px;font-weight:600;text-anchor:middle}
+.e-wall{stroke:var(--ink);stroke-width:.6}
+.e-corner{fill:var(--box-face);opacity:.55;stroke:var(--maple-edge);stroke-width:.15}
+.e-gapbox{fill:none;stroke:var(--muted);stroke-width:.25;stroke-dasharray:1 .8}
+.e-gaptext{fill:var(--muted);font-family:var(--f-mono);font-size:2.1px;text-anchor:middle}
+.e-warn{fill:var(--warn);font-family:var(--f-mono);font-size:2.1px;font-weight:600;text-anchor:middle}
+.e-bad{fill:var(--bad);font-family:var(--f-mono);font-size:2.3px;font-weight:600;text-anchor:middle}
+.e-walllabel{fill:var(--muted);font-family:var(--f-mono);font-size:2px;text-anchor:middle}
+.wallcard{display:grid;gap:6px;min-width:0}
+.wallcard + .wallcard{border-top:1px solid var(--line);padding-top:14px}
+.wallsum{display:flex;flex-wrap:wrap;gap:4px 16px;align-items:baseline}
+.g-line{stroke:var(--grain);stroke-width:.12;fill:none}
+
+/* editor */
+table{border-collapse:collapse;width:100%}
+.ed{min-width:1140px}
+.ed th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:6px 6px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.ed td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ed tr:hover td{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+.cid{font-family:var(--f-mono);font-weight:600;font-size:.95rem}
+.in,.sel{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line-strong);border-radius:5px;padding:5px 7px;min-width:0}
+.in{font-family:var(--f-mono);font-variant-numeric:tabular-nums;width:6.2em}
+.in.name{font-family:var(--f-body);width:10em}
+.in.tiny{width:3.4em}
+.in::placeholder{color:var(--muted);opacity:.8}
+.in[aria-invalid="true"]{border-color:var(--bad);background:var(--bad-soft)}
+.sel{padding:5px 4px}
+.fronts{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.fronts label{display:inline-flex;gap:5px;align-items:center;font-size:.85rem;color:var(--muted);white-space:nowrap}
+.rowacts{display:flex;gap:4px;justify-content:flex-end}
+.icon{width:28px;height:28px;display:inline-grid;place-items:center;border:1px solid var(--line);background:var(--panel);border-radius:5px;cursor:pointer;font-size:.9rem;line-height:1}
+.icon:hover{border-color:var(--accent);color:var(--accent)}
+.icon.del:hover{border-color:var(--bad);color:var(--bad)}
+.viewbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:6px 12px;cursor:pointer;font-weight:500}
+.seg button + button{border-left:1px solid var(--line-strong)}
+.seg button[aria-checked="true"]{background:var(--accent);color:var(--accent-ink)}
+.ed td.where{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);white-space:nowrap}
+.addrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line-strong)}
+.tab{border:1px solid transparent;border-bottom:none;background:none;padding:9px 14px;border-radius:7px 7px 0 0;cursor:pointer;font-family:var(--f-display);font-size:1.12rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:-1px}
+.tab[aria-selected="true"]{background:var(--panel);border-color:var(--line-strong);color:var(--ink)}
+.tabpanel{background:var(--panel);border:1px solid var(--line-strong);border-top:none;border-radius:0 0 10px 10px;padding:16px;display:grid;gap:18px;min-width:0}
+
+/* cut list */
+.cl{min-width:760px}
+.cl caption{text-align:left;padding:4px 0 8px}
+.cl th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.cl td{padding:6px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.cl td.num{font-family:var(--f-mono);text-align:right;white-space:nowrap}
+.cl td.dim{font-family:var(--f-mono);white-space:nowrap;font-weight:500}
+.cl td.qty{font-family:var(--f-mono);font-weight:600;text-align:right}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.78rem;background:var(--maple);color:var(--maple-ink);border-radius:4px;padding:1px 6px;font-weight:600}
+.note{font-size:.82rem;color:var(--muted)}
+.matsum{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+
+/* sheets */
+.sheetgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:18px}
+.sheet{display:grid;gap:6px;min-width:0}
+.sheet svg{width:100%;height:auto;display:block}
+.s-sheet{fill:var(--waste);stroke:var(--line-strong);stroke-width:.3}
+.s-hatch{stroke:var(--hatch);stroke-width:.35}
+.s-part{fill:var(--maple);stroke:var(--maple-edge);stroke-width:.25}
+.s-num{fill:var(--maple-ink);font-family:var(--f-mono);font-weight:600;text-anchor:middle;dominant-baseline:central}
+.s-dim{fill:var(--maple-ink);font-family:var(--f-mono);text-anchor:middle;dominant-baseline:central;opacity:.85}
+.grainbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;background:var(--accent-soft);border-radius:8px;padding:10px 12px}
+.grainbar p{flex:1 1 360px}
+.gr{display:inline-flex;gap:5px;align-items:center;font-size:.85rem;white-space:nowrap;cursor:pointer}
+.gr input:disabled + *{opacity:.6}
+.cutplan{display:grid;gap:12px}
+.strip{border-left:3px solid var(--maple-edge);padding:2px 0 2px 12px;display:grid;gap:5px}
+.strip-h{font-weight:600;display:flex;align-items:center;gap:8px}
+.snum{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:.75rem;font-family:var(--f-mono);flex:none}
+.cuts{margin:0;padding-left:22px;display:grid;gap:6px;font-size:.9rem}
+.cuts > li{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.cuts .act{font-weight:500}
+.cuts .res{display:inline-flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline}
+.cuts .sz{font-family:var(--f-mono);color:var(--muted);font-size:.82rem}
+.rips{margin:2px 0 0;padding-left:4px;display:grid;gap:3px;list-style:none;flex-basis:100%}
+.rips li{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline}
+.rips li::before{content:"↳";color:var(--muted)}
+.cuts .how{color:var(--muted);font-size:.85rem}
+.off{font-size:.82rem;color:var(--muted);font-style:italic}
+.seq{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);margin:0;padding-left:18px;display:grid;gap:2px}
+
+/* warnings */
+.warns{display:grid;gap:6px}
+.warn{border-left:3px solid var(--warn);background:var(--warn-soft);padding:7px 10px;border-radius:0 6px 6px 0;font-size:.9rem}
+.warn.bad{border-color:var(--bad);background:var(--bad-soft)}
+.warn b{font-family:var(--f-mono)}
+
+/* hardware */
+.hw{max-width:820px}
+.hw td,.hw th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+.hw th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.hw td.qty{font-family:var(--f-mono);font-weight:600;text-align:right;white-space:nowrap}
+
+/* settings */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:10px 12px 12px;margin:0;display:grid;gap:8px;min-width:0}
+legend{font-family:var(--f-display);font-weight:600;font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;padding:0 4px}
+.field{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.field label{font-size:.88rem}
+.field small{grid-column:1/-1;color:var(--muted);font-size:.78rem;margin-top:-4px}
+.field .in{width:7em}
+.field .in.wide{width:12em}
+.computed{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;border-top:1px dashed var(--line-strong);padding-top:7px}
+.computed b{font-family:var(--f-mono)}
+.rules{max-width:72ch;display:grid;gap:8px}
+.rules p,.rules li{margin:0}
+.rules ul{margin:0;padding-left:20px;display:grid;gap:6px}
+
+/* corner plans */
+.cornergrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr));gap:22px}
+.cornercard{display:grid;gap:10px;align-content:start;min-width:0}
+.cornercard svg{width:100%;height:auto;max-height:480px;display:block}
+.p-wall{stroke:var(--ink);stroke-width:1.1;stroke-linecap:square}
+.p-box{fill:var(--box-face);fill-opacity:.45;stroke:var(--maple-edge);stroke-width:.25}
+.p-front{fill:var(--maple);stroke:var(--maple-edge);stroke-width:.18}
+.p-filler{fill:var(--maple);stroke:var(--accent);stroke-width:.4}
+.p-ghost{fill:none;stroke:var(--muted);stroke-width:.22;stroke-dasharray:1 .8}
+.p-arc{fill:none;stroke:var(--accent);stroke-width:.22;stroke-dasharray:1 .6}
+.p-dim{stroke:var(--accent);stroke-width:.2}
+.p-dimtext{fill:var(--accent);font-family:var(--f-mono);font-size:1.75px;font-weight:600;text-anchor:middle}
+.p-label{fill:var(--ink);font-family:var(--f-mono);font-size:1.75px;font-weight:600;text-anchor:middle}
+.p-note{fill:var(--muted);font-family:var(--f-mono);font-size:1.5px;text-anchor:middle}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px;max-width:68ch}
+dialog{border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:var(--ink);padding:16px;width:min(680px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(10,15,18,.45)}
+dialog textarea{width:100%;height:280px;font-family:var(--f-mono);font-size:.8rem;background:var(--paper);color:var(--ink);border:1px solid var(--line-strong);border-radius:6px;padding:8px;resize:vertical}
+.dlg-body{display:grid;gap:10px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:6px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+@media (max-width:560px){h1{font-size:2rem}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <div class="eyebrow">Frameless · 3/4″ maple ply · pocket screws · platform base</div>
+      <h1>Frameless Cabinet Planner</h1>
+    </div>
+    <div class="stats" id="stats" aria-live="polite"></div>
+  </header>
+  <details class="mats" id="matsBox" open>
+    <summary class="mats-head"><h2 id="matsH">Materials and cost</h2><b class="mono" id="matsTotal"></b><span class="note">Type your prices into the boxes. Click the heading to fold this away.</span></summary>
+    <div class="mats-groups" id="mats"></div>
+  </details>
+
+  <div class="banner" id="exampleBanner" hidden>
+    <p><b>Starter layout, not your final design.</b> It uses your wall lengths, stove and window, with a blind corner and diagonal corner upper like your SketchUp model. The cabinet sizes are placeholders: edit them or clear the list. Everything recalculates as you type.</p>
+    <button class="btn small" id="clearBtn" type="button">Clear all cabinets</button>
+    <button class="btn small" id="dismissBtn" type="button">Keep and edit</button>
+  </div>
+
+  <section class="panel" aria-labelledby="elevH">
+    <div class="panel-head">
+      <h2 id="elevH">Walls</h2>
+      <span class="note">Fixed pieces stay put; the other cabinets run out from the corner in list order and skip over the stove, window and fixed pieces. Room sizes are under Construction rules → Room.</span>
+    </div>
+    <div id="elev" style="display:grid;gap:14px"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="cornerH" id="cornerPanel" hidden>
+    <div class="panel-head">
+      <h2 id="cornerH">Corner plan</h2>
+      <span class="note">Looking down from above. Dimensions in inches.</span>
+    </div>
+    <div class="cornergrid" id="corner"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="cabH">
+    <div class="panel-head">
+      <h2 id="cabH">Cabinets</h2>
+      <span class="note">Dimensions in inches. Type <span class="mono">23 1/2</span>, <span class="mono">23-1/2</span> or <span class="mono">23.5</span>. Leave height or depth blank to use the default shown.</span>
+    </div>
+    <div class="viewbar">
+      <div class="seg" role="radiogroup" aria-label="Which wall to show" id="segWall">
+        <button type="button" role="radio" data-vw="L">Left wall</button><button type="button" role="radio" data-vw="R">Right wall</button><button type="button" role="radio" data-vw="">Not placed</button><button type="button" role="radio" data-vw="all">All</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="Which row to show" id="segRow">
+        <button type="button" role="radio" data-vr="base">Base</button><button type="button" role="radio" data-vr="upper">Upper</button><button type="button" role="radio" data-vr="all">All</button>
+      </div>
+      <span class="note mono" id="viewNote"></span>
+    </div>
+    <div class="scroll"><table class="ed" id="editor"></table></div>
+    <div class="addrow">
+      <span class="note">Add:</span>
+      <button class="btn small" type="button" data-add="base-doors" data-row="base">Base · doors</button>
+      <button class="btn small" type="button" data-add="base-drawers" data-row="base">Base · drawers</button>
+      <button class="btn small" type="button" data-add="base-drawer-door" data-row="base">Base · drawer + doors</button>
+      <button class="btn small" type="button" data-add="base-blind" data-row="base">Blind corner base</button>
+      <button class="btn small" type="button" data-add="upper" data-row="upper">Upper</button>
+      <button class="btn small" type="button" data-add="upper-diag" data-row="upper">Diagonal corner upper</button>
+      <button class="btn small" type="button" data-add="upper-blind" data-row="upper">Blind corner upper</button>
+      <button class="btn small" type="button" data-add="shelf" data-row="upper">Shelf</button>
+      <button class="btn small" type="button" data-add="tall" data-row="base">Tall</button>
+      <button class="btn small" type="button" data-add="gap" data-row="base">Open space / appliance</button>
+      <button class="btn small" type="button" data-add="gable" data-row="base">Fridge gable</button>
+      <button class="btn small" type="button" data-add="panel" data-row="base">Custom part</button>
+    </div>
+  </section>
+
+  <div>
+    <div class="tabs" role="tablist" aria-label="Outputs">
+      <button class="tab" role="tab" id="tab-cut" aria-controls="p-cut" aria-selected="true" type="button">Cut list</button>
+      <button class="tab" role="tab" id="tab-sheets" aria-controls="p-sheets" aria-selected="false" type="button">Sheet layouts</button>
+      <button class="tab" role="tab" id="tab-hw" aria-controls="p-hw" aria-selected="false" type="button">Hardware</button>
+      <button class="tab" role="tab" id="tab-rules" aria-controls="p-rules" aria-selected="false" type="button">Construction rules</button>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-cut" aria-labelledby="tab-cut">
+      <div class="toolbar">
+        <label class="fronts">Show
+          <select class="sel" id="cabFilter"></select>
+        </label>
+        <div class="actions">
+          <button class="btn primary" type="button" id="copyCut">Copy cut list</button>
+          <button class="btn" type="button" id="saveBtn">Save project</button>
+          <button class="btn" type="button" id="loadBtn">Load project</button>
+        </div>
+      </div>
+      <div class="warns" id="warns"></div>
+      <div id="cutlist" style="display:grid;gap:22px"></div>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-sheets" aria-labelledby="tab-sheets" hidden>
+      <div class="toolbar">
+        <div class="actions">
+          <button class="btn primary" type="button" id="optBtn">Optimize sheet layouts</button>
+          <select class="sel" id="optEffort" aria-label="How long to search">
+            <option value="3000">Quick search (3 s)</option>
+            <option value="10000" selected>Thorough (10 s)</option>
+            <option value="30000">Very thorough (30 s)</option>
+          </select>
+        </div>
+        <span class="note" id="optStatus" role="status" aria-live="polite"></span>
+      </div>
+      <p class="note" style="margin:0">Table saw or track saw layouts: rip each strip to width, crosscut it into pieces, and rip again where narrow parts share a piece. Grain runs left to right on every sheet. Numbers match the cut list, and sizes are length (with the grain) × width. The optimizer only runs when you click it.</p>
+      <div id="sheets" style="display:grid;gap:26px"></div>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-hw" aria-labelledby="tab-hw" hidden>
+      <div id="hardware"></div>
+    </div>
+    <div class="tabpanel" role="tabpanel" id="p-rules" aria-labelledby="tab-rules" hidden>
+      <div class="rules" id="rulesText"></div>
+      <div class="sgrid" id="settings"></div>
+      <div><button class="btn small" type="button" id="resetSettings">Reset construction rules to defaults</button></div>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dlg-body">
+    <h3 id="dlgTitle">Project</h3>
+    <p class="note" id="dlgNote" style="margin:0"></p>
+    <textarea id="dlgText" spellcheck="false" aria-labelledby="dlgTitle"></textarea>
+    <p class="note" id="dlgErr" style="margin:0;color:var(--bad)" hidden></p>
+    <div class="actions" style="justify-content:flex-end">
+      <button class="btn" type="button" id="dlgCopy">Copy</button>
+      <button class="btn primary" type="button" id="dlgLoad" hidden>Load this project</button>
+      <button class="btn" type="button" id="dlgClose">Close</button>
+    </div>
+  </div>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const STORE = 'frameless-planner-v1';
+const DEF = {
+  boxT: 23/32, backT: 1/4, drwT: 1/2,
+  sheetBoxL: 96, sheetBoxW: 48, sheetBackL: 96, sheetBackW: 48, sheetDrwL: 96, sheetDrwW: 48,
+  rotBack: false, rotDrw: true, kerf: 1/8, trim: 0,
+  kickStrips: true, rotBox: false, grainFree: {},
+  counterH: 36, counterT: 1.5, counterOverhang: 0.125, platformH: 3.5, kickSetback: 3, upperTop: 84, upperH: 30,
+  baseD: 23.875, upperD: 12, tallD: 24,
+  stretcherW: 4, nailerW: 4, baseLowerNailer: true, tallFixedShelf: true,
+  edgeReveal: 1/16, frontGap: 1/8, counterGap: 1/8, vReveal: 1/8, pairOver: 24, drawerGrain: 'horizontal',
+  shelfSetback: 1/4, shelfClear: 1/16,
+  slideClear: 1/2, drwDeduct: 1, slideLens: '12, 14, 16, 18, 20, 22', grooveD: 1/4, btmClear: 1/16,
+  pullLen: 5, pullDoubleOver: 30, round: 32,
+  priceBox: 110, priceBack: 55, priceDrw: 85, spareBox: 1,
+  priceBand: 0.15, priceHinge: 6, priceAngle: 12, priceSlide: 20, pricePull: 6, pricePin: 0.1, priceMisc: 40,
+  pricePS: 9, pricePSF: 9, priceBrad: 10, priceGlue: 7, priceJoin: 8, priceFrontScr: 7, priceBumper: 6,
+  priceWallScr: 15, priceShim: 5, price2x4: 4.5, priceConScr: 12, priceFinish: 55, taxRate: 13,
+  leftLen: 156, rightLen: 128, stoveWall: 'L', stoveFrom: 56, stoveW: 30, winWall: 'R', winFrom: 69.625, winW: 29.875, cornerOwner: 'R', gapAt: 'corner'
+};
+let S = {...DEF};
+let cabs = [];
+let uidN = 1;
+let isExample = true;
+let filterCab = 'all';
+let lastR = null;
+
+const TYPES = {'base-doors':'Base · doors','base-drawers':'Base · drawers','base-drawer-door':'Base · drawer + doors','base-blind':'Base · blind corner','upper':'Upper','upper-diag':'Upper · diagonal corner','upper-blind':'Upper · blind corner','shelf':'Shelf','tall':'Tall','gap':'Open space / appliance','panel':'Custom part'};
+const BASE = new Set(['base-doors','base-drawers','base-drawer-door','base-blind']);
+const LOWER = new Set(['base-doors','base-drawers','base-drawer-door','base-blind','tall']);
+const UPPER = new Set(['upper','upper-diag','upper-blind']);
+const BANDS = {none:{l:0,w:0},'1L':{l:1,w:0},'2L':{l:2,w:0},'1L1W':{l:1,w:1},all:{l:2,w:2}};
+const BAND_LABELS = [['none','No banding'],['1L','1 long edge'],['2L','2 long edges'],['1L1W','1 long + 1 short'],['all','All 4 edges']];
+const KIND_ORDER = ['Side','Corner side','Upper gable','Bottom','Top / bottom','Corner top / bottom','Fixed shelf','Drawer shelf','Drawer partition','Front stretcher','Rear nailer','Adjustable shelf','Corner shelf','Door','Drawer front','False front','Blind panel','Corner filler','Filler cleat','Toe kick','Back','Drawer box side','Drawer box front/back','Drawer bottom'];
+const MAT_ORDER = ['box','back','drw'];
+
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2 = n => Math.round(n*100)/100;
+
+function parseDim(v){
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim().replace(/(["″]|in\.?)$/i,'').trim();
+  if (!s) return null;
+  let m;
+  if ((m = s.match(/^(\d*\.?\d+)$/))) return parseFloat(m[1]);
+  if ((m = s.match(/^(\d+)(?:\s+|\s*-\s*)(\d+)\s*\/\s*(\d+)$/))) return +m[3] ? +m[1] + (+m[2])/(+m[3]) : NaN;
+  if ((m = s.match(/^(\d+)\s*\/\s*(\d+)$/))) return +m[2] ? (+m[1])/(+m[2]) : NaN;
+  return NaN;
+}
+const okDim = v => typeof v === 'number' && isFinite(v) && v > 0;
+function dimOr(v, d){ const x = parseDim(v); return okDim(x) ? x : d; }
+function fmt(x, den){
+  den = den || S.round || 32;
+  if (!isFinite(x)) return '—';
+  const neg = x < 0; x = Math.abs(x);
+  let w = Math.floor(x + 1e-9), n = Math.round((x - w) * den), d = den;
+  if (n >= den){ w++; n = 0; }
+  while (n && n % 2 === 0 && d % 2 === 0){ n /= 2; d /= 2; }
+  const s = n ? (w ? `${w} ${n}/${d}` : `${n}/${d}`) : `${w}`;
+  return (neg ? '-' : '') + s;
+}
+const rnd = x => Math.round(x * S.round) / S.round;
+
+function baseBoxH(){ return S.counterH - S.counterT - S.platformH; }
+function autoH(type){
+  if (BASE.has(type)) return baseBoxH();
+  if (UPPER.has(type)) return S.upperH;
+  if (type === 'tall') return S.upperTop - S.platformH;
+  return null;
+}
+function autoD(type){
+  if (BASE.has(type)) return S.baseD;
+  if (UPPER.has(type)) return S.upperD;
+  if (type === 'tall') return S.tallD;
+  return null;
+}
+function autoLower(){ return baseBoxH() - S.counterGap; }
+function rowOf(c){
+  if (BASE.has(c.type)) return 'base';
+  if (c.type === 'tall') return 'full';
+  if (c.type === 'upper' || c.type === 'upper-blind') return 'upper';
+  if (c.type === 'upper-diag') return 'corner';
+  if (c.type === 'shelf') return 'upper';
+  if (c.type === 'gap') return c.gapRow === 'dw' ? 'base' : c.gapRow === 'fridge' ? 'full' : c.gapRow;
+  if (c.type === 'panel'){ if (c.wall !== 'L' && c.wall !== 'R') return null; const L = parseDim(c.h); return okDim(L) && L > S.counterH + 2 ? 'full' : 'base'; }
+  return null;
+}
+function hingeCount(h){ return h <= 40 ? 2 : h <= 60 ? 3 : h <= 80 ? 4 : 5; }
+function slideList(){ return String(S.slideLens).split(/[,\s]+/).map(parseFloat).filter(x => x > 0).sort((a,b) => b-a); }
+function pickSlide(avail){ return slideList().find(x => x <= avail + 1e-6) || 0; }
+
+function newKey(){ return Math.random().toString(36).slice(2, 10); }
+function newCab(type, o={}){
+  const c = {uid: uidN++, type, name:'', w:'24', h:'', d:'', doors:'auto', shelves:'', drawers:'3', topFront:'6', falseFront:false, rows:'2', lowerDoor:'', mat:'box', qty:'1', band:'1L', blindSide:'right', filler:'3', topMode:'drawer', wall:'L', gapRow:'dw', pos:'flow', posAt:'', snap:'auto', key:newKey(), alignTo:'', alignSide:'left', gables:false, gableD:'', gableH:'', hingeFlip:false, withTop:false};
+  const per = {
+    'base-drawers': {w:'18'}, 'upper': {w:'30'}, 'base-blind': {w:'42'}, 'upper-diag': {w:'24'}, 'upper-blind': {w:'30'}, 'shelf': {name:'Shelf over fridge', w:'36'}, 'gap': {name:'Dishwasher', w:'24'},
+    'panel': {name:'Finished end panel', w:'24 23/32', h:'34 1/2', wall:''}
+  };
+  return Object.assign(c, per[type] || {}, o);
+}
+function example(){
+  return [
+    newCab('base-blind', {name:'Blind corner', w:'42', wall:'L', topMode:'drawer', filler:'3'}),
+    newCab('base-drawers', {name:'Drawer base', w:'13 7/8', wall:'L', drawers:'3', topFront:'6'}),
+    newCab('base-drawer-door', {name:'Base', w:'18', wall:'L'}),
+    newCab('base-drawers', {name:'Drawer base', w:'18', wall:'R', drawers:'3', topFront:'6'}),
+    newCab('base-drawer-door', {name:'Base', w:'20 15/16', wall:'R'}),
+    newCab('base-drawer-door', {name:'Sink base', w:'36', wall:'R', falseFront:true, pos:'window'}),
+    newCab('gap', {name:'Dishwasher', w:'24', wall:'R', gapRow:'dw', pos:'follow'}),
+    newCab('panel', {name:'Dishwasher end panel', w:'24 23/32', h:'34 1/2', wall:'R', band:'1L', pos:'follow'}),
+    newCab('upper-diag', {name:'Corner upper', w:'24'}),
+    newCab('upper', {name:'Upper', w:'31 1/4', wall:'L'}),
+    newCab('upper', {name:'Over stove', w:'30', h:'18', wall:'L', pos:'stove', gables:true}),
+    newCab('upper', {name:'Upper', w:'30', wall:'L'}),
+    newCab('upper', {name:'Upper', w:'30', wall:'R'}),
+    newCab('upper', {name:'Upper', w:'15', wall:'R'}),
+    newCab('upper', {name:'Upper', w:'27', wall:'R'})
+  ];
+}
+function computeIds(){
+  const n = {B:0,U:0,T:0,O:0,P:0,S:0};
+  return cabs.map(c => {
+    const p = BASE.has(c.type) ? 'B' : UPPER.has(c.type) ? 'U' : c.type === 'tall' ? 'T' : c.type === 'gap' ? 'O' : c.type === 'shelf' ? 'S' : 'P';
+    return p + (++n[p]);
+  });
+}
+
+/* ---------- cabinet → parts ---------- */
+function buildCab(c, id){
+  const X = {c, id, label: c.name || TYPES[c.type], parts:[], fronts:[], warns:[], ok:false, W:0, H:0, D:0,
+    hw:{hinges:0, angleHinges:0, pulls:0, falsePulls:0, slides:{}, pins:0, doors:0, drawers:0}};
+  const warn = (msg, lvl='warn') => X.warns.push({id, msg, lvl});
+  const add = (name, mat, L, Wd, qty, band={l:0,w:0}, extra={}) => {
+    if (qty <= 0) return;
+    if (!(L > 0 && Wd > 0)){ warn(`${name} works out to no size. Check this cabinet's dimensions.`, 'bad'); return; }
+    X.parts.push({cab:id, name, mat, L, W:Wd, qty, band, rot: !!extra.rot, note: extra.note || ''});
+  };
+  const W = parseDim(c.w);
+  if (c.type === 'shelf'){
+    const D = dimOr(c.d, 24), at = dimOr(c.h, 72);
+    if (!okDim(W)){ warn('Enter the shelf width (the space between the gables).', 'bad'); return X; }
+    add('Shelf board', 'box', W - 1/16, D, 1, {l:1,w:0}, {note:'between the gables on shelf pins or cleats'});
+    X.W = W; X.H = S.boxT; X.D = D; X.shelfAt = at; X.isShelf = true; X.ok = true;
+    if (c.withTop){
+      add('Top board', 'box', W, D, 1, {l:1,w:0}, {note:'fastened between the gable tops, flush with them'});
+      X.topAt = S.upperTop;
+      if (at > S.upperTop - 4) warn(`The shelf at ${fmt(at)}″ is within 4″ of the top board at ${fmt(S.upperTop)}″. Lower the shelf to leave a usable opening.`);
+    }
+    X.hw.pins += 4;
+    return X;
+  }
+  if (c.type === 'gap'){
+    if (!okDim(W)){ warn('Enter a width for this open space.', 'bad'); return X; }
+    const gr = rowOf(c);
+    X.W = W; X.H = gr === 'upper' ? S.upperH : gr === 'full' ? (c.gapRow === 'fridge' ? 70 : S.upperTop) : S.counterH - S.counterT;
+    X.ok = true; X.gap = true; return X;
+  }
+  if (c.type === 'panel'){
+    const L = parseDim(c.h), q = Math.max(0, parseInt(c.qty, 10) || 0);
+    if (!okDim(W) || !okDim(L)){ warn('Enter a width and a length for this part.', 'bad'); return X; }
+    const rot = (c.mat === 'back' && S.rotBack) || (c.mat === 'drw' && S.rotDrw);
+    add(c.name || 'Custom part', c.mat, L, W, q, BANDS[c.band] || BANDS.none, {rot});
+    X.ok = true; X.W = matInfo(c.mat).t * q; X.H = L; X.panel = true; return X;
+  }
+  const H = dimOr(c.h, autoH(c.type)), D = dimOr(c.d, autoD(c.type));
+  if (!okDim(W) || !okDim(H) || !okDim(D)){ warn('Width, height or depth is missing or not a number.', 'bad'); return X; }
+  X.W = W; X.H = H; X.D = D;
+  const t = S.boxT, iw = W - 2*t, sd = D - S.backT;
+  if (iw <= 2 || sd <= 2){ warn('This cabinet is too small for the box material.', 'bad'); return X; }
+  X.ok = true;
+  if (c.type === 'upper-diag') return buildDiag(X, c, warn, add);
+  const isBase = BASE.has(c.type);
+
+  add('Side', 'box', H, sd, 2, {l:1,w:0});
+  if (isBase){
+    add('Bottom', 'box', iw, sd, 1, {l:1,w:0});
+    add('Front stretcher', 'box', iw, S.stretcherW, 1, {l:1,w:0}, {note:'flat, top front'});
+    const nl = S.baseLowerNailer ? 2 : 1;
+    add('Rear nailer', 'box', iw, S.nailerW, nl, {l:0,w:0}, {note: nl === 2 ? 'on edge, top and bottom of back' : 'on edge, top of back'});
+  } else if (c.type === 'upper' || c.type === 'upper-blind'){
+    add('Top / bottom', 'box', iw, sd, 2, {l:1,w:0});
+    add('Rear nailer', 'box', iw, S.nailerW, 2, {l:0,w:0}, {note:'on edge, top and bottom of back'});
+  } else if (c.type === 'tall'){
+    add('Top / bottom', 'box', iw, sd, 2, {l:1,w:0});
+    if (S.tallFixedShelf) add('Fixed shelf', 'box', iw, sd, 1, {l:1,w:0}, {note:'structural, mid-height'});
+    add('Rear nailer', 'box', iw, S.nailerW, S.tallFixedShelf ? 3 : 2, {l:0,w:0}, {note:'on edge, top / middle / bottom'});
+  }
+  add('Back', 'back', H, W, 1, {l:0,w:0}, {rot:S.rotBack, note:'glued and nailed on, flush'});
+
+  const er = S.edgeReveal, gap = S.frontGap, fw = W - 2*er;
+  const doorMode = c.doors === 'auto' ? (W > S.pairOver ? '2' : '1L') : c.doors;
+
+  function doors(y0, h, pv){
+    if (doorMode === '0') return;
+    if (h <= 0){ warn('There is no room left for doors. Check the drawer front height.', 'bad'); return; }
+    const n = doorMode === '2' ? 2 : 1;
+    const dw = n === 2 ? (fw - gap) / 2 : fw;
+    if (n === 1) X.fronts.push({kind:'door', x:er, y:y0, w:dw, h, pull: doorMode === '1R' ? 'left' : 'right', pv});
+    else {
+      X.fronts.push({kind:'door', x:er, y:y0, w:dw, h, pull:'right', pv});
+      X.fronts.push({kind:'door', x:er + dw + gap, y:y0, w:dw, h, pull:'left', pv});
+    }
+    add('Door', 'box', h, dw, n, {l:2,w:2});
+    X.hw.hinges += n * hingeCount(h); X.hw.pulls += n; X.hw.doors += n;
+    if (n === 1 && dw > 24.01) warn(`Single door is ${fmt(dw)}″ wide. Doors wider than about 24″ swing far into the room and are heavy on two hinges. Consider a pair.`);
+    if (n === 2 && dw < 8) warn(`Each door of the pair is only ${fmt(dw)}″ wide. Consider a single door.`);
+  }
+  function drawer(y, h, isFalse, o={}){
+    const vert = S.drawerGrain === 'vertical', fwv = o.fw ?? fw, iwv = o.iw ?? iw;
+    add(isFalse ? 'False front' : 'Drawer front', 'box', vert ? h : fwv, vert ? fwv : h, 1, {l:2,w:2}, {note: isFalse ? 'fixed in place' : ''});
+    X.fronts.push({kind: isFalse ? 'false' : 'drawer', x: o.x ?? er, y, w:fwv, h});
+    const np = fwv > S.pullDoubleOver ? 2 : 1;
+    if (isFalse){ X.hw.falsePulls += np; return; }
+    X.hw.pulls += np; X.hw.drawers++;
+    const bh = Math.floor((h - S.drwDeduct) * 16 + 1e-6) / 16;
+    const bw = iwv - 2*S.slideClear;
+    const depth = pickSlide(sd - t - 0.25);
+    if (!depth){ warn('No drawer slide length in your list fits this cabinet depth.', 'bad'); return; }
+    if (bh < 2){ warn(`A drawer box works out to ${fmt(bh)}″ tall. Make that drawer front taller.`, 'bad'); return; }
+    const dt = S.drwT, g = S.grooveD;
+    add('Drawer box side', 'drw', depth, bh, 2, {l:0,w:0}, {rot:S.rotDrw});
+    add('Drawer box front/back', 'drw', bw - 2*dt, bh, 2, {l:0,w:0}, {rot:S.rotDrw, note:'between the sides'});
+    if (g > 0) add('Drawer bottom', 'back', bw - 2*dt + 2*g - S.btmClear, depth - 2*dt + 2*g - S.btmClear, 1, {l:0,w:0}, {rot:true, note:'sits in groove'});
+    else add('Drawer bottom', 'back', bw, depth, 1, {l:0,w:0}, {rot:true, note:'nailed under the box'});
+    X.hw.slides[depth] = (X.hw.slides[depth] || 0) + 1;
+  }
+  function shelves(def){
+    const v = String(c.shelves).trim();
+    const n = v === '' ? def : Math.max(0, parseInt(v, 10) || 0);
+    if (!n) return;
+    add('Adjustable shelf', 'box', iw - S.shelfClear, sd - S.shelfSetback, n, {l:1,w:0});
+    X.shelfN = n;
+    X.hw.pins += 4*n;
+    if (iw > 32) warn(`The shelves in this cabinet are ${fmt(iw)}″ long with no support in the middle, and 3/4″ plywood starts to sag past about 32″ under heavy dishes. Glue a hardwood strip to the front edge, add a center divider, or split it into two cabinets. Fine to ignore for light items.`);
+  }
+
+  const topY = H - S.counterGap;
+  if (c.type === 'base-doors'){ doors(0, topY, 'top'); shelves(1); }
+  else if (c.type === 'base-drawers'){
+    const n = Math.min(8, Math.max(1, parseInt(c.drawers, 10) || 1));
+    const tf = parseDim(c.topFront), avail = topY - (n-1)*gap;
+    const hs = (n > 1 && okDim(tf)) ? [tf, ...Array(n-1).fill((avail - tf)/(n-1))] : Array(n).fill(avail/n);
+    if (hs.some(h => h < 3)) warn('Some drawer fronts are under 3″ tall. Reduce the number of drawers or the top front height.', 'bad');
+    let y = topY;
+    hs.forEach(h => { y -= h; if (h > 0) drawer(y, h, false); y -= gap; });
+  }
+  else if (c.type === 'base-drawer-door'){
+    const tf = dimOr(c.topFront, 6), y = topY - tf;
+    drawer(y, tf, !!c.falseFront);
+    doors(0, y - gap, 'top');
+    shelves(1);
+  }
+  else if (c.type === 'base-blind'){
+    const F = dimOr(c.filler, 3), right = c.wall === 'L' ? true : c.wall === 'R' ? false : c.blindSide !== 'left';
+    const blindX = S.baseD + t + F, blindW = blindX - gap/2;
+    const dw = W - blindX - gap/2 - er;
+    if (dw < 9) warn(`The door on this blind corner works out to ${fmt(dw)}″. Make the cabinet at least ${fmt(Math.ceil(blindX + 12.5))}″ wide for a 12″ door.`, 'bad');
+    add('Blind panel', 'box', topY, blindW, 1, {l:2,w:2}, {note:'screwed to the box front over the blind end'});
+    X.fronts.push({kind:'blind', x: right ? W - blindW : 0, y:0, w:blindW, h:topY});
+    if (dw > 0){
+      const dx = right ? er : W - er - dw;
+      let dh = topY;
+      if (c.topMode === 'false' || c.topMode === 'drawer'){
+        const tf = dimOr(c.topFront, 6), y = topY - tf;
+        drawer(y, tf, c.topMode === 'false', {fw:dw, x:dx, iw:W - t - blindX});
+        if (c.topMode === 'drawer'){
+          add('Drawer shelf', 'box', W - blindX, sd, 1, {l:1,w:0}, {note:'under the drawer, partition to outer side'});
+          add('Drawer partition', 'box', H - t - y + gap/2, sd - t, 1, {l:1,w:0}, {note:`sits on the drawer shelf, ${fmt(blindX)}″ from the blind end; slide mounts to it`});
+        }
+        dh = y - gap;
+      }
+      X.fronts.push({kind:'door', x:dx, y:0, w:dw, h:dh, pull: right !== !!c.hingeFlip ? 'right' : 'left', pv:'top'});
+      add('Door', 'box', dh, dw, 1, {l:2,w:2}, {note:'hinged on the end away from the corner'});
+      X.hw.hinges += hingeCount(dh); X.hw.pulls++; X.hw.doors++;
+    }
+    add('Corner filler', 'box', topY, F, 1, {l:0,w:0}, {note:'goes on the first cabinet of the other wall'});
+    add('Filler cleat', 'box', topY, 3, 1, {l:0,w:0}, {note:'glued behind the filler, screwed to that cabinet'});
+    shelves(1);
+    X.corner = {type:'blind', W, D, F, blindX, blindW, dw, right, y0: D + t + F, topMode:c.topMode, flip:!!c.hingeFlip};
+  }
+  else if (c.type === 'upper-blind'){
+    const F = dimOr(c.filler, 3), right = c.wall === 'L' ? true : c.wall === 'R' ? false : c.blindSide !== 'left';
+    const blindX = S.upperD + t + F, blindW = blindX - gap/2, dw = W - blindX - gap/2 - er;
+    const y0 = S.vReveal/2, fh = H - S.vReveal;
+    if (dw < 9) warn(`The door on this blind corner works out to ${fmt(dw)}″. Make the cabinet at least ${fmt(Math.ceil(blindX + 12.5))}″ wide for a 12″ door.`, 'bad');
+    add('Blind panel', 'box', fh, blindW, 1, {l:2,w:2}, {note:'screwed to the box front over the blind end'});
+    X.fronts.push({kind:'blind', x: right ? W - blindW : 0, y:y0, w:blindW, h:fh});
+    if (dw > 0){
+      X.fronts.push({kind:'door', x: right ? er : W - er - dw, y:y0, w:dw, h:fh, pull: right !== !!c.hingeFlip ? 'right' : 'left', pv:'bottom'});
+      add('Door', 'box', fh, dw, 1, {l:2,w:2}, {note:'hinged on the end away from the corner'});
+      X.hw.hinges += hingeCount(fh); X.hw.pulls++; X.hw.doors++;
+    }
+    add('Corner filler', 'box', fh, F, 1, {l:0,w:0}, {note:'goes on the first upper of the other wall'});
+    add('Filler cleat', 'box', fh, 3, 1, {l:0,w:0}, {note:'glued behind the filler, screwed to that cabinet'});
+    shelves(H <= 24 ? 1 : H <= 36 ? 2 : 3);
+    X.corner = {type:'blind', upper:true, W, D, F, blindX, blindW, dw, right, y0: D + t + F, flip:!!c.hingeFlip};
+  }
+  else if (c.type === 'upper'){
+    doors(S.vReveal/2, H - S.vReveal, 'bottom'); shelves(H <= 24 ? 1 : H <= 36 ? 2 : 3);
+    if (c.gables){
+      const gH = dimOr(c.gableH, S.upperH), gD = dimOr(c.gableD, S.upperD + t);
+      add('Upper gable', 'box', gH, gD, 2, {l:1,w:0}, {note:'one on each end, top flush with the uppers'});
+      X.gab = {t, H:gH}; X.EW = W + 2*t;
+    }
+  }
+  else if (c.type === 'tall'){
+    const avail = H - S.vReveal;
+    if (c.rows === '2'){
+      const lo = dimOr(c.lowerDoor, autoLower()), up = avail - lo - gap;
+      doors(0, lo, 'top'); doors(lo + gap, up, 'bottom');
+    } else doors(0, avail, 'middle');
+    shelves(4);
+  }
+  return X;
+}
+
+function buildDiag(X, c, warn, add){
+  const L = X.W, d = X.D, H = X.H, t = S.boxT, b = S.backT, s2 = Math.SQRT2;
+  if (L < d + 2*t + 4){ X.ok = false; warn(`A diagonal corner this deep needs more than ${fmt(d + 2*t + 4)}″ along each wall.`, 'bad'); return X; }
+  const sideW = d + t - b, sq = L - t - b, clip = L - d - 2*t;
+  add('Corner side', 'box', H, sideW, 2, {l:1,w:0}, {note:'front edge beveled 45°, long point on the inside face'});
+  add('Corner top / bottom', 'box', sq, sq, 2, {l:0,w:0,x:clip*s2}, {note:`cut square, then cut off one corner ${fmt(clip)} along each edge; band the cut edge`});
+  add('Rear nailer', 'box', L - t - b, S.nailerW, 2, {l:0,w:0}, {note:'on edge, first back, top and bottom'});
+  add('Rear nailer', 'box', L - 2*t - b, S.nailerW, 2, {l:0,w:0}, {note:'on edge, second back, butts the first nailer'});
+  add('Back', 'back', H, L, 1, {l:0,w:0}, {rot:S.rotBack, note:'first wall, full length'});
+  add('Back', 'back', H, L - b, 1, {l:0,w:0}, {rot:S.rotBack, note:'second wall, butts the first back'});
+  const v = String(c.shelves).trim();
+  const n = v === '' ? (H <= 24 ? 1 : H <= 36 ? 2 : 3) : Math.max(0, parseInt(v, 10) || 0);
+  if (n){
+    const cl = S.shelfClear/2, ss = sq - cl, sc = clip - cl + S.shelfSetback*s2;
+    add('Corner shelf', 'box', ss, ss, n, {l:0,w:0,x:sc*s2}, {note:`cut square, then cut off one corner ${fmt(sc)} along each edge; band the cut edge`});
+    X.hw.pins += 4*n;
+  }
+  const diagW = s2*(L - d), dw = diagW - 2*t, dh = H - S.vReveal;
+  add('Door', 'box', dh, dw, 1, {l:2,w:2}, {note:'angled corner door'});
+  X.fronts.push({kind:'door', x:t, y:S.vReveal/2, w:dw, h:dh, pull: c.hingeFlip ? 'left' : 'right', pv:'bottom'});
+  X.hw.angleHinges += hingeCount(dh); X.hw.pulls++; X.hw.doors++;
+  X.EW = diagW;
+  X.corner = {type:'diag', L, d, clip, diagW, dw, sideW};
+  return X;
+}
+
+/* ---------- whole project ---------- */
+function compute(){
+  const ids = computeIds();
+  const R = {cabs:[], warns:[], parts:[], groups:[], byMat:{}, nests:{}, hw:{hinges:0, angleHinges:0, pulls:0, falsePulls:0, slides:{}, pins:0, doors:0, drawers:0}};
+  cabs.forEach((c, i) => {
+    const x = buildCab(c, ids[i]);
+    R.cabs.push(x); R.parts.push(...x.parts); R.warns.push(...x.warns);
+    for (const k of ['hinges','angleHinges','pulls','falsePulls','pins','doors','drawers']) R.hw[k] += x.hw[k];
+    for (const [L, q] of Object.entries(x.hw.slides)) R.hw.slides[L] = (R.hw.slides[L] || 0) + q;
+  });
+  return R;
+}
+function fullCompute(){ const R = compute(); R.walls = layoutWalls(R); addToeKick(R); finalize(R); return R; }
+function addToeKick(R){
+  if (!S.kickStrips || !R.walls) return;
+  const maxL = S.sheetBoxL - 2*S.trim - 1;
+  for (const k of ['L','R']){
+    const w = R.walls[k];
+    const iv = w.items.filter(i => i.row !== 'upper' && (BASE.has(i.x.c.type) || i.x.c.type === 'tall')).map(i => [i.a, i.b]).sort((p, q) => p[0] - q[0]);
+    const merged = [];
+    for (const [a, b] of iv){ const m = merged[merged.length - 1]; if (m && a <= m[1] + 1) m[1] = Math.max(m[1], b); else merged.push([a, b]); }
+    for (const [a, b] of merged){
+      const L = b - a, n = Math.ceil(L / maxL);
+      R.parts.push({cab:'Kick', name:'Toe kick', mat:'box', L: L / n, W: S.platformH, qty: n, band:{l:0,w:0}, rot:false,
+        note:`${w.name}: ${fmt(L, 16)}″ run${n > 1 ? ` in ${n} pieces` : ''}, cut to fit on site`});
+    }
+  }
+}
+const grainKey = p => [p.mat, p.name, rnd(p.L), rnd(p.W)].join('|');
+const HIDDEN_PARTS = ['Rear nailer','Front stretcher','Filler cleat','Drawer partition','Drawer shelf','Back','Drawer bottom','Drawer box side','Drawer box front/back'];
+function finalize(R){
+  for (const p of R.parts){
+    p.baseRot = p.rot || (p.mat === 'box' && S.rotBox);
+    p.rot = p.baseRot || !!(S.grainFree && S.grainFree[grainKey(p)]);
+  }
+  const gmap = new Map();
+  const keyOf = p => [p.mat, p.name, rnd(p.L), rnd(p.W), p.band.l, p.band.w, rnd(p.band.x || 0), p.rot ? 1 : 0].join('|');
+  for (const p of R.parts){
+    const k = keyOf(p);
+    let g = gmap.get(k);
+    if (!g){ g = {key:k, gk:grainKey(p), baseRot:p.baseRot, mat:p.mat, name:p.name, L:p.L, W:p.W, band:p.band, rot:p.rot, qty:0, cabs:new Map(), notes:new Set()}; gmap.set(k, g); }
+    g.qty += p.qty; g.cabs.set(p.cab, (g.cabs.get(p.cab) || 0) + p.qty);
+    if (p.note) g.notes.add(p.note);
+    p.key = k;
+  }
+  const ko = n => { const i = KIND_ORDER.indexOf(n); return i < 0 ? 99 : i; };
+  R.groups = [...gmap.values()].sort((a,b) =>
+    MAT_ORDER.indexOf(a.mat) - MAT_ORDER.indexOf(b.mat) || ko(a.name) - ko(b.name) || a.name.localeCompare(b.name) || b.L - a.L || b.W - a.W);
+  R.groups.forEach((g, i) => { g.num = i + 1; });
+  R.numByKey = new Map(R.groups.map(g => [g.key, g.num]));
+  for (const m of MAT_ORDER){
+    const gs = R.groups.filter(g => g.mat === m);
+    if (!gs.length) continue;
+    R.byMat[m] = gs;
+    R.nests[m] = nest(gs, matInfo(m));
+    for (const f of R.nests[m].failed) R.warns.push({id:'#' + f.num, msg:`${f.name} (${fmt(f.L)} × ${fmt(f.W)}) does not fit on a ${fmt(matInfo(m).L)} × ${fmt(matInfo(m).W)} sheet${f.rot ? '' : ' with the grain running lengthwise'}. Split the part or allow it to ignore grain.`, lvl:'bad'});
+  }
+  return R;
+}
+function matInfo(m){
+  if (m === 'box') return {key:'box', name:'Maple plywood', t:S.boxT, nominal:'3/4″', L:S.sheetBoxL, W:S.sheetBoxW};
+  if (m === 'back') return {key:'back', name:'Maple plywood, backs and drawer bottoms', t:S.backT, nominal:'1/4″', L:S.sheetBackL, W:S.sheetBackW};
+  return {key:'drw', name:'Maple plywood, drawer boxes', t:S.drwT, nominal:'1/2″', L:S.sheetDrwL, W:S.sheetDrwW};
+}
+
+/* ---------- rip-first strip nesting ---------- */
+function nest(groups, mat){
+  const k = S.kerf, tr = S.trim;
+  const SL = mat.L - 2*tr, SW = mat.W - 2*tr;
+  const items = [];
+  for (const g of groups) for (let i = 0; i < g.qty; i++){
+    let L = g.L, W = g.W;
+    if (g.rot && W > L && W <= SL){ [L, W] = [W, L]; }
+    items.push({num:g.num, name:g.name, L, W, rot:g.rot});
+  }
+  items.sort((a,b) => b.W - a.W || b.L - a.L);
+  const sheets = [], failed = [];
+  const orients = it => it.rot ? [[it.L, it.W], [it.W, it.L]] : [[it.L, it.W]];
+  const newSheet = () => { const s = {strips:[], usedW:0}; sheets.push(s); return s; };
+  const openStrip = (s, w) => { const st = {y:s.usedW, w, used:0, parts:[]}; s.strips.push(st); s.usedW += w + k; return st; };
+  const place = (st, L, W, it) => { st.parts.push({x:st.used, y:st.y, L, W, num:it.num, name:it.name}); st.used += L + k; };
+  for (const it of items){
+    let best = null;
+    for (const s of sheets) for (const st of s.strips) for (const [L, W] of orients(it)){
+      if (W <= st.w + 1e-6 && st.used + L <= SL + 1e-6){
+        const waste = st.w - W;
+        if (!best || waste < best.waste) best = {st, L, W, waste};
+      }
+    }
+    if (best && best.waste <= Math.max(1.5, 0.25*best.W)){ place(best.st, best.L, best.W, it); continue; }
+    let opened = false;
+    for (const s of sheets){
+      const o = orients(it).filter(([L, W]) => L <= SL + 1e-6 && W <= SW - s.usedW + 1e-6).sort((a,b) => a[1] - b[1])[0];
+      if (o){ place(openStrip(s, o[1]), o[0], o[1], it); opened = true; break; }
+    }
+    if (opened) continue;
+    if (best){ place(best.st, best.L, best.W, it); continue; }
+    const o = orients(it).filter(([L, W]) => L <= SL + 1e-6 && W <= SW + 1e-6).sort((a,b) => a[1] - b[1])[0];
+    if (o){ const s = newSheet(); place(openStrip(s, o[1]), o[0], o[1], it); }
+    else failed.push({num:it.num, name:it.name, L:it.L, W:it.W, rot:it.rot});
+  }
+  const sheetArea = mat.L * mat.W;
+  for (const s of sheets){
+    s.area = s.strips.reduce((a, st) => a + st.parts.reduce((b, p) => b + p.L*p.W, 0), 0);
+    s.yield = s.area / sheetArea;
+  }
+  return {sheets, failed, mat};
+}
+
+/* ---------- rendering: header stats ---------- */
+function plyCost(R){
+  const price = {box:S.priceBox, back:S.priceBack, drw:S.priceDrw};
+  const rows = MAT_ORDER.filter(m => R.nests[m]).map(m => {
+    const layout = sheetsFor(R, m).length, spare = m === 'box' ? Math.round(S.spareBox) : 0;
+    return {m, mi:R.nests[m].mat, layout, spare, n:layout + spare, price:price[m]};
+  });
+  return {rows, total: Math.round(rows.reduce((a, r) => a + r.n*r.price, 0))};
+}
+function bandInches(R){ return R.groups.reduce((a, g) => a + (g.band.l*g.L + g.band.w*g.W + (g.band.x || 0))*g.qty, 0); }
+const MATS_UI = [
+  {g:'Sheet goods', k:'box',   label:'3/4″ maple sheets',  unit:'sheet', pk:'priceBox'},
+  {g:'Sheet goods', k:'back',  label:'1/4″ maple sheets',  unit:'sheet', pk:'priceBack'},
+  {g:'Sheet goods', k:'drw',   label:'1/2″ maple sheets',  unit:'sheet', pk:'priceDrw'},
+  {g:'Sheet goods', k:'band',  label:'Edge banding',       unit:'ft',    pk:'priceBand', suffix:' ft'},
+  {g:'Hardware', k:'hinge', label:'Hinges',             unit:'each',  pk:'priceHinge'},
+  {g:'Hardware', k:'angle', label:'+45° corner hinges', unit:'each',  pk:'priceAngle'},
+  {g:'Hardware', k:'slide', label:'Drawer slides',      unit:'pair',  pk:'priceSlide', suffix:' pr'},
+  {g:'Hardware', k:'pull',  label:'Pulls',              unit:'each',  pk:'pricePull'},
+  {g:'Hardware', k:'pin',   label:'Shelf pins',         unit:'each',  pk:'pricePin'},
+  {g:'Hardware', k:'bumper',label:'Door and drawer bumpers', unit:'100', per:100, pk:'priceBumper'},
+  {g:'Fasteners and glue', k:'ps',    label:'Pocket screws 1 1/4″ coarse', unit:'100', per:100, pk:'pricePS'},
+  {g:'Fasteners and glue', k:'psf',   label:'Pocket screws 1″ (drawers)',  unit:'100', per:100, pk:'pricePSF'},
+  {g:'Fasteners and glue', k:'brad',  label:'Brads 1″ (backs)',            unit:'1000', per:1000, pk:'priceBrad'},
+  {g:'Fasteners and glue', k:'join',  label:'Screws 1 1/4″ (joining boxes, fillers, panels)', unit:'100', per:100, pk:'priceJoin'},
+  {g:'Fasteners and glue', k:'front', label:'Screws 1″ (drawer fronts)',   unit:'100', per:100, pk:'priceFrontScr'},
+  {g:'Fasteners and glue', k:'glue',  label:'Wood glue, 16 oz',            unit:'bottle', pk:'priceGlue'},
+  {g:'Platform and install', k:'2x4',   label:'2×4×8′ for the platform', unit:'board', pk:'price2x4'},
+  {g:'Platform and install', k:'conscr',label:'Construction screws 3″',   unit:'100', per:100, pk:'priceConScr'},
+  {g:'Platform and install', k:'wall',  label:'Cabinet screws 3″ (into studs)', unit:'100', per:100, pk:'priceWallScr'},
+  {g:'Platform and install', k:'shim',  label:'Shims',                    unit:'bundle', pk:'priceShim'},
+  {g:'Finish and supplies', k:'finish', label:'Water-based finish',       unit:'gallon', pk:'priceFinish', suffix:' gal'},
+  {g:'Finish and supplies', k:'misc',   label:'Sandpaper, filler, rags',  unit:'total',  pk:'priceMisc', lump:true}
+];
+function buildMats(){
+  const groups = [...new Set(MATS_UI.map(m => m.g))];
+  $('#mats').innerHTML = groups.map(g => `<div class="mgroup"><h3>${esc(g)}</h3><div class="mats-grid">` +
+    MATS_UI.filter(m => m.g === g).map(m => `<div class="mbox" id="mb-${m.k}">
+      <span class="cnt" id="mc-${m.k}">${m.lump ? 'Lump sum' : '0'}</span><span class="lbl">${esc(m.label)}</span>
+      <label class="price">$<input id="mp-${m.k}" data-pk="${m.pk}" value="${esc(S[m.pk])}" inputmode="decimal" autocomplete="off" aria-label="${esc(m.label)} price per ${m.unit}"> ${m.lump ? '' : '/ ' + m.unit}</label>
+      <span class="sub" id="ms-${m.k}"></span>
+      <span class="crows"><span>Subtotal</span><span id="mt-${m.k}">$0</span><span>Tax</span><span id="mx-${m.k}">$0</span><span class="tot">Total</span><span class="tot" id="mz-${m.k}">$0</span></span></div>`).join('') + '</div></div>').join('') +
+    `<div class="mats-grid"><div class="mbox total"><span class="lbl">Everything, estimate</span>
+      <label class="price">Tax <input id="mp-tax" data-pk="taxRate" value="${esc(S.taxRate)}" inputmode="decimal" autocomplete="off" aria-label="Sales tax rate in percent"> %</label>
+      <span class="crows"><span>Subtotal</span><span id="mt-total">$0</span><span>Tax</span><span id="mx-total">$0</span><span class="tot">Total</span><span class="tot" id="mz-total">$0</span></span><span class="note">Plywood includes ${Math.round(S.spareBox)} spare 3/4″ sheet${Math.round(S.spareBox) === 1 ? '' : 's'}. Fastener counts include 10% extra.</span></div></div>`;
+}
+function consumables(R){
+  const P = names => R.parts.filter(p => names.includes(p.name));
+  const pocket34 = ['Bottom','Top / bottom','Front stretcher','Rear nailer','Fixed shelf','Drawer shelf','Drawer partition','Corner top / bottom','Top board'];
+  let ps = 0, psf = 0;
+  for (const p of P(pocket34)) ps += p.qty * 2 * Math.max(2, Math.ceil(p.W / 7));
+  for (const p of P(['Drawer box front/back'])) psf += p.qty * 2 * Math.max(2, Math.ceil(p.W / 4));
+  const brad = Math.ceil(P(['Back']).reduce((a, p) => a + p.qty * 2 * (p.L + p.W) / 4, 0));
+  const cabsN = R.cabs.filter(x => x.ok && !['panel','gap','shelf'].includes(x.c.type)).length;
+  const nailers = P(['Rear nailer']).reduce((a, p) => a + p.qty, 0);
+  const panels = R.cabs.filter(x => x.ok && x.panel && (x.c.wall === 'L' || x.c.wall === 'R')).length;
+  const cleats = P(['Filler cleat']).reduce((a, p) => a + p.qty, 0);
+  const join = Math.max(0, cabsN - 1) * 4 + cleats * 6 + panels * 6 + P(['Upper gable']).reduce((a, p) => a + p.qty * 4, 0);
+  const falseFronts = P(['False front']).reduce((a, p) => a + p.qty, 0);
+  const front = R.hw.drawers * 4 + falseFronts * 2;
+  const bumper = (R.hw.doors + R.hw.drawers + falseFronts) * 2;
+  // platform: runs of cabinets that sit on it, per wall
+  let lf = 0, crosses = 0, runs = 0;
+  const depth = Math.max(0, S.baseD - S.kickSetback);
+  if (R.walls) for (const k of ['L','R']){
+    const iv = R.walls[k].items.filter(i => i.row !== 'upper' && (BASE.has(i.x.c.type) || i.x.c.type === 'tall')).map(i => [i.a, i.b]).sort((p, q) => p[0] - q[0]);
+    const merged = [];
+    for (const [a, b] of iv){ const m = merged[merged.length - 1]; if (m && a <= m[1] + 1) m[1] = Math.max(m[1], b); else merged.push([a, b]); }
+    for (const [a, b] of merged){ const L = b - a, c = Math.ceil(L / 16) + 1; lf += 2*L + c * Math.max(0, depth - 3); crosses += c; runs++; }
+  }
+  const boards = lf ? Math.ceil(lf * 1.1 / 96) : 0;
+  const conscr = crosses * 4 + runs * 10;
+  const wall = nailers * 2 + panels * 2;
+  const area = R.parts.filter(p => p.mat === 'box').reduce((a, p) => a + p.L * p.W * p.qty, 0) / 144;
+  const gal = area ? Math.max(1, Math.ceil(area * 2 * 3 / 450)) : 0;
+  const x10 = n => Math.ceil(n * 1.1);
+  return {
+    ps:{n:x10(ps), basis:'Pocket holes in bottoms, tops, stretchers, nailers and fixed shelves: 2 per joint end, plus one for every 7″ of joint'},
+    psf:{n:x10(psf), basis:'Drawer box fronts and backs into the sides: 2 per end, more on tall drawers'},
+    brad:{n:x10(brad), basis:'Backs nailed every 4″ around the edge'},
+    join:{n:x10(join), basis:'4 between each pair of neighboring boxes, 6 per filler cleat and placed panel, 4 per upper gable'},
+    front:{n:x10(front), basis:'4 per drawer front, 2 per false front, driven from inside the drawer box'},
+    glue:{n:cabsN ? Math.max(1, Math.ceil(cabsN / 6)) : 0, basis:'About one 16 oz bottle per 6 cabinets'},
+    bumper:{n:bumper, basis:'2 per door and drawer front'},
+    '2x4':{n:boards, basis:`Front and back rails plus cross pieces every 16″ under ${runs} run${runs === 1 ? '' : 's'} of cabinets, plus 10%`},
+    conscr:{n:x10(conscr), basis:'4 per platform cross piece, plus some to fasten each run down'},
+    wall:{n:x10(wall), basis:'2 through each rear nailer into the studs, 2 per wall panel'},
+    shim:{n:cabsN ? Math.max(1, Math.ceil(cabsN / 6)) : 0, basis:'One bundle per 6 cabinets for leveling the platform and uppers'},
+    finish:{n:gal, basis:`${Math.round(area)} sq ft of 3/4″ maple, both faces, 3 coats at about 450 sq ft a gallon. Set the price to 0 if your plywood is prefinished.`}
+  };
+}
+function matCounts(R){
+  const pc = plyCost(R), sheets = m => (pc.rows.find(r => r.m === m) || {n:0}).n, c = consumables(R);
+  const out = {box:sheets('box'), back:sheets('back'), drw:sheets('drw'), band:Math.ceil(bandInches(R)*1.1/12),
+    hinge:R.hw.hinges, angle:R.hw.angleHinges, slide:Object.values(R.hw.slides).reduce((a, q) => a + q, 0),
+    pull:R.hw.pulls + R.hw.falsePulls, pin:R.hw.pins, misc:1};
+  for (const [k, v] of Object.entries(c)) out[k] = v.n;
+  return out;
+}
+const money = v => '$' + (Math.round(v * 100) / 100).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+function renderStats(R){
+  const nCab = R.cabs.filter(x => x.c.type !== 'panel' && x.c.type !== 'gap' && x.c.type !== 'shelf').length;
+  const pieces = R.groups.reduce((a, g) => a + g.qty, 0);
+  const bad = R.warns.filter(w => w.lvl === 'bad').length;
+  const cnt = matCounts(R);
+  let total = 0;
+  for (const m of MATS_UI){
+    const n = cnt[m.k], packs = m.per ? Math.ceil(n / m.per) : n, cost = packs * (S[m.pk] || 0);
+    const sub = document.getElementById('ms-' + m.k);
+    if (sub) sub.textContent = m.per && n ? `${packs} pack${packs === 1 ? '' : 's'} of ${m.per}` : '';
+    total += cost;
+    const box = document.getElementById('mb-' + m.k);
+    if (!box) continue;
+    box.hidden = !m.lump && !n;
+    if (!m.lump) document.getElementById('mc-' + m.k).textContent = n.toLocaleString() + (m.suffix || '');
+    document.getElementById('mt-' + m.k).textContent = money(cost);
+    document.getElementById('mx-' + m.k).textContent = money(cost * S.taxRate / 100);
+    document.getElementById('mz-' + m.k).textContent = money(cost * (1 + S.taxRate / 100));
+  }
+  const tax = total * S.taxRate / 100, grand = total + tax;
+  const tt = document.getElementById('mt-total'); if (tt) tt.textContent = money(total);
+  const tx = document.getElementById('mx-total'); if (tx) tx.textContent = money(tax);
+  const tz = document.getElementById('mz-total'); if (tz) tz.textContent = money(grand);
+  const mt = document.getElementById('matsTotal'); if (mt) mt.textContent = `${money(grand)} with ${S.taxRate}% tax`;
+  $('#stats').innerHTML =
+    `<div class="stat"><b>${nCab}</b><span>cabinets</span></div>` +
+    `<div class="stat"><b>${pieces}</b><span>parts to cut</span></div>` +
+    `<div class="stat"><b>${money(grand)}</b><span>total with tax (est.)</span></div>` +
+    (bad ? `<button type="button" class="stat bad" id="statProblems" title="Show the problems"><b>${bad}</b><span>problem${bad === 1 ? '' : 's'} to fix →</span></button>` : '');
+}
+
+/* ---------- wall layout ---------- */
+function layoutWalls(R){
+  const W = {
+    L:{key:'L', name:'Left wall', len:S.leftLen, items:[], gaps:[], openings:[]},
+    R:{key:'R', name:'Right wall', len:S.rightLen, items:[], gaps:[], openings:[]}
+  };
+  const placed = R.cabs.filter(x => x.ok && (x.c.wall === 'L' || x.c.wall === 'R') && rowOf(x.c) && rowOf(x.c) !== 'corner');
+  const blind = placed.find(x => x.c.type === 'base-blind');
+  const diag = R.cabs.find(x => x.ok && x.c.type === 'upper-diag');
+  const blindU = placed.find(x => x.c.type === 'upper-blind');
+  const lowOwner = blind ? blind.c.wall : S.cornerOwner;
+  for (const k of ['L','R']){
+    const w = W[k];
+    w.lowStart = k === lowOwner ? 0 : (blind ? blind.corner.y0 : S.baseD + S.boxT);
+    w.upStart = diag ? diag.corner.L : blindU ? (k === blindU.c.wall ? 0 : blindU.corner.y0) : (k === S.cornerOwner ? 0 : S.upperD + S.boxT);
+    w.blind = blind; w.diag = diag; w.blindU = diag ? null : blindU; w.lowOwner = lowOwner;
+    if (S.stoveWall === k) w.openings.push({kind:'stove', row:'base', a:S.stoveFrom - S.counterOverhang, b:S.stoveFrom + S.stoveW + S.counterOverhang, sa:S.stoveFrom, sb:S.stoveFrom + S.stoveW});
+    if (S.winWall === k) w.openings.push({kind:'window', row:'upper', a:S.winFrom, b:S.winFrom + S.winW});
+    const flow = (rows, openBlocks, start, rowName) => {
+      const mine = placed.filter(x => x.c.wall === k && rows.includes(rowOf(x.c)));
+      const fixed = new Map(); let lastFixed = null;
+      for (const x of mine){
+        const wd = x.EW || x.W, m = x.c.pos || 'flow';
+        let a = null;
+        if (m === 'window' || m === 'stove'){
+          const op = w.openings.find(o => o.kind === m);
+          if (op) a = (op.a + op.b)/2 - wd/2;
+          else R.warns.push({id:x.id, msg:`Set to center on the ${m}, but the ${m} is not on this wall.`, lvl:'bad'});
+        } else if (m === 'at'){
+          const v = parseDim(x.c.posAt);
+          if (v === 0 || okDim(v)) a = v; else R.warns.push({id:x.id, msg:'Enter how far from the corner this piece starts.', lvl:'bad'});
+        } else if (m === 'align'){
+          const base = w.items.find(i => i.row !== 'upper' && i.x.c.key === x.c.alignTo);
+          if (!base) R.warns.push({id:x.id, msg:'Pick the base cabinet this upper lines up with. It has to be on the same wall.', lvl:'bad'});
+          else if (x.c.alignSide === 'center') a = (base.a + base.b)/2 - wd/2;
+          else a = ((x.c.alignSide === 'right') === (k === 'R')) ? base.b - wd : base.a;
+        } else if (m === 'follow'){
+          if (lastFixed) a = lastFixed.b; else R.warns.push({id:x.id, msg:'Set to sit right after a fixed piece, but there is no fixed piece above it in the list on this wall.', lvl:'bad'});
+        }
+        if (a !== null){ const f = {x, a, b:a + wd}; fixed.set(x, f); lastFixed = f; }
+      }
+      const blocks = openBlocks.slice();
+      const fl = [...fixed.values()];
+      fl.forEach((f, i) => {
+        if (f.a < start - 1e-6) R.warns.push({id:f.x.id, msg:`This fixed piece starts ${fmt(start - f.a)}″ inside the corner space.`, lvl:'bad'});
+        for (const o of openBlocks) if (f.a < o.b - 1e-6 && f.b > o.a + 1e-6) R.warns.push({id:f.x.id, msg:`This fixed piece overlaps the ${o.name}.`, lvl:'bad'});
+        for (const g of fl.slice(i + 1)) if (f.a < g.b - 1e-6 && f.b > g.a + 1e-6) R.warns.push({id:f.x.id, msg:`This fixed piece overlaps ${g.x.id}.`, lvl:'bad'});
+        blocks.push({a:f.a, b:f.b, name:f.x.id, fx:true});
+      });
+      let cur = start; const here = [];
+      for (const x of mine){
+        const wd = x.EW || x.W, f = fixed.get(x);
+        if (f){ here.push({x, row:rowOf(x.c), a:f.a, b:f.b, fixed:true}); cur = Math.max(cur, f.b); continue; }
+        let a = cur, moved = true;
+        while (moved){ moved = false; for (const bl of blocks) if (!bl.fx && a < bl.b - 1e-6 && a + wd > bl.a + 1e-6){ a = bl.b; moved = true; } }
+        const hitFx = blocks.find(bl => bl.fx && a < bl.b - 1e-6 && a + wd > bl.a + 1e-6);
+        if (hitFx) R.warns.push({id:x.id, msg:`${x.id} runs ${fmt(a + wd - hitFx.a)}″ into ${hitFx.name}, which is fixed. Make ${x.id} or a cabinet before it narrower.`, lvl:'bad'});
+        here.push({x, row:rowOf(x.c), a, b:a + wd});
+        cur = a + wd;
+      }
+      {
+        // Each run of loose cabinets between two fixed things (corner, fixed piece, stove, window, tall cabinet, wall end)
+        // has one leftover gap. Cabinets set to snap toward the corner sit on the corner side of it, the rest on the far side.
+        const anchors = blocks;
+        const groups = new Map();
+        for (const it of here){
+          if (it.fixed) continue;
+          const nxt = anchors.filter(an => an.a >= it.a + 1e-6).sort((p, q) => p.a - q.a)[0] || 'END';
+          if (!groups.has(nxt)) groups.set(nxt, []);
+          groups.get(nxt).push(it);
+        }
+        const plans = [];
+        for (const [nxt, its] of groups){
+          const segStart = Math.max(start, ...anchors.filter(an => an.b <= its[0].a + 1e-6).map(an => an.b));
+          const segEnd = nxt === 'END' ? w.len : nxt.a;
+          const total = its.reduce((t, i) => t + (i.b - i.a), 0);
+          if (total > segEnd - segStart + 1e-6) continue;
+          const dir = it => { const sn = it.x.c.snap; if (sn !== 'left' && sn !== 'right') return null; return (k === 'R') === (sn === 'left') ? 'c' : 'a'; };
+          let lo = 0, hi = its.length;
+          its.forEach((it, i) => { const d = dir(it); if (d === 'c') lo = Math.max(lo, i + 1); if (d === 'a') hi = Math.min(hi, i); });
+          if (lo > hi){
+            R.warns.push({id:its[hi].x.id, msg:`${its[hi].x.id} snaps away from the corner but a cabinet after it snaps toward the corner. Only one gap fits between them, so the snap toward the corner wins.`, lvl:'warn'});
+            hi = lo;
+          }
+          const def = nxt === 'END' ? its.length : (S.gapAt === 'fixed' ? its.length : 0);
+          plans.push({its, segStart, segEnd, k: Math.min(hi, Math.max(lo, def))});
+        }
+        for (const {its, segStart, segEnd, k: split} of plans){
+          let c = segStart;
+          for (let i = 0; i < split; i++){ const wd = its[i].b - its[i].a; its[i].a = c; its[i].b = c + wd; c += wd; }
+          c = segEnd;
+          for (let i = its.length - 1; i >= split; i--){ const wd = its[i].b - its[i].a; its[i].b = c; its[i].a = c - wd; c -= wd; }
+        }
+      }
+      w.items.push(...here);
+      for (const it of here) if (it.row === 'full' && !(it.x.gap && it.x.c.gapRow === 'fridge')) fulls.push({a:it.a, b:it.b, name: it.x.panel ? it.x.id : 'tall cabinet'});
+      const end = here.length ? Math.max(...here.map(i => i.b)) : start;
+      const occ = here.map(i => ({a:i.a, b:i.b, name:i.x.id})).concat(blocks).sort((p, q) => p.a - q.a);
+      let c2 = start;
+      for (const iv of occ){
+        if (iv.a > end + 1e-6 || !here.length) break;
+        if (iv.a > c2 + 1e-6) w.gaps.push({row:rowName, a:c2, b:iv.a, before:iv.name, corner: Math.abs(c2 - start) < 1e-6});
+        c2 = Math.max(c2, iv.b);
+      }
+      return end;
+    };
+    const fulls = [];
+    w.lowEnd = flow(['base','full'], w.openings.filter(o => o.row === 'base').map(o => ({a:o.a, b:o.b, name:o.kind})), w.lowStart, 'base');
+    w.upEnd = flow(['upper'], w.openings.filter(o => o.row === 'upper').map(o => ({a:o.a, b:o.b, name:o.kind})).concat(fulls), w.upStart, 'upper');
+    w.upEnd = Math.max(w.upEnd, ...fulls.map(f => f.b));
+    for (const o of w.openings){
+      const end = o.row === 'base' ? w.lowEnd : w.upEnd;
+      if (o.b > w.len + 1e-6) R.warns.push({id:w.name, msg:`The ${o.kind} runs past the end of the wall. Check the room sizes.`, lvl:'bad'});
+    }
+    const win = w.openings.find(o => o.kind === 'window');
+    const sink = w.items.find(i => i.x.c.type === 'base-drawer-door' && i.x.c.falseFront);
+    if (win && sink){
+      w.winCenter = (win.a + win.b)/2;
+      w.sinkOff = (sink.a + sink.b)/2 - w.winCenter;
+      if (Math.abs(w.sinkOff) > 1/32) R.warns.push({id:sink.x.id, msg:`The sink base is ${fmt(Math.abs(w.sinkOff))}″ ${w.sinkOff > 0 ? 'farther from' : 'closer to'} the corner than the window center. Make the cabinets between the corner and the sink ${fmt(Math.abs(w.sinkOff))}″ ${w.sinkOff > 0 ? 'narrower' : 'wider'} in total, or change the corner filler by that much.`, lvl:'warn'});
+    }
+    const lowOver = w.lowEnd - w.len, upOver = w.upEnd - w.len;
+    if (lowOver > 1e-6) R.warns.push({id:w.name, msg:`Base cabinets run ${fmt(lowOver)}″ past the end of the wall.`, lvl:'bad'});
+    if (upOver > 1e-6) R.warns.push({id:w.name, msg:`Upper cabinets run ${fmt(upOver)}″ past the end of the wall.`, lvl:'bad'});
+    for (const g of w.gaps) if (g.corner){
+      if (g.b - g.a > 3) R.warns.push({id:w.name, msg:`There's an empty ${fmt(g.b - g.a)}″ space in the ${g.row === 'upper' ? 'uppers' : 'base cabinets'} between the corner and the first ${g.row === 'upper' ? 'upper' : 'base cabinet'}. A little space there is your hidden wiggle room, but this is big enough for a cabinet: add one about ${fmt(Math.max(0, g.b - g.a - .5), 8)}″ wide at the start of the list, or widen the one next to the corner.`, lvl:'warn'});
+    } else R.warns.push({id:w.name, msg:`${fmt(g.b - g.a)}″ gap in the ${g.row === 'upper' ? 'uppers' : 'bases'} at ${fmt(g.a)}″ from the corner, before ${['stove','window','tall cabinet'].includes(g.before) ? 'the ' : ''}${g.before}. Fill it with a filler strip or adjust a cabinet width.`, lvl:'warn'});
+  }
+  if (blindU && !diag){
+    const first = W[blindU.c.wall].items.find(i => i.row === 'upper');
+    if (first && first.x !== blindU) R.warns.push({id:blindU.id, msg:'The blind corner upper should be the first upper on its wall. Move it up the list.', lvl:'bad'});
+    const bw = W[blindU.c.wall], bit = bw.items.find(i => i.x === blindU);
+    blindU.corner.gap = bit ? Math.max(0, bit.a - bw.upStart) : 0;
+    if (blindU.corner.gap > S.upperD - 2) R.warns.push({id:blindU.id, msg:`The blind corner upper sits ${fmt(blindU.corner.gap)}″ from the corner, so its blind end no longer reaches behind the other wall's uppers. Make it wider.`, lvl:'bad'});
+  }
+  for (const k of ['L','R']) for (const it of W[k].items){
+    if (it.row !== 'upper') continue;
+    const bottom = it.x.isShelf ? it.x.shelfAt - S.boxT : S.upperTop - it.x.H;
+    const fr = W[k].items.find(f => f.x.gap && f.x.c.gapRow === 'fridge' && f.a < it.b - 1e-6 && f.b > it.a + 1e-6);
+    if (fr && bottom < fr.x.H + 1) R.warns.push({id:it.x.id, msg:`Its bottom is ${fmt(bottom)}″ off the floor, which leaves less than 1″ above the ${fr.x.H}″ fridge. Raise it or check your fridge's real height.`, lvl:'warn'});
+  }
+  if (diag && blindU) R.warns.push({id:blindU.id, msg:'You have both a diagonal corner upper and a blind corner upper. Use one or the other.', lvl:'bad'});
+  if (blind){
+    const first = W[blind.c.wall].items.find(i => i.row !== 'upper');
+    if (first && first.x !== blind) R.warns.push({id:blind.id, msg:'The blind corner should be the first base cabinet on its wall. Move it up the list.', lvl:'bad'});
+    const bw = W[blind.c.wall], bit = bw.items.find(i => i.x === blind);
+    blind.corner.gap = bit ? Math.max(0, bit.a - bw.lowStart) : 0;
+    if (blind.corner.gap > S.baseD - 3) R.warns.push({id:blind.id, msg:`The blind corner sits ${fmt(blind.corner.gap)}″ from the corner, so its blind end no longer reaches behind the other wall's cabinets. Make it wider.`, lvl:'bad'});
+  }
+  return W;
+}
+
+/* ---------- rendering: elevations ---------- */
+function elevDefs(){
+  return `<defs>
+    <pattern id="gv" width="2.2" height="20" patternUnits="userSpaceOnUse"><rect class="g-bg" width="2.2" height="20"/><path class="g-line" d="M.5 0V20M1.5 0C1.4 6 1.7 13 1.5 20"/></pattern>
+    <pattern id="gh" width="20" height="2.2" patternUnits="userSpaceOnUse"><rect class="g-bg" width="20" height="2.2"/><path class="g-line" d="M0 .5H20M0 1.5C6 1.4 13 1.7 20 1.5"/></pattern>
+  </defs>`;
+}
+function elevFrame(len, X, Y, maxY){
+  let o = '';
+  const ticks = [[S.counterH], [S.upperTop - S.upperH], [S.upperTop], [S.platformH]];
+  for (const [y] of ticks) o += `<line class="e-tick" x1="${X(-2)}" x2="${X(len)}" y1="${Y(y)}" y2="${Y(y)}"/>`;
+  for (const [y] of ticks) o += `<text class="e-ticklabel" x="${X(-2.5)}" y="${r2(Y(y) + .7)}">${fmt(y, 8)}″</text>`;
+  return o;
+}
+function stoveSvg(x0, wd, X, Y){
+  const top = S.counterH, R2 = v => r2(v);
+  let o = `<rect class="e-steel" x="${X(x0 + .25)}" y="${Y(top)}" width="${R2(wd - .5)}" height="${R2(top)}" rx=".5"/>`;
+  o += `<rect class="e-steel2" x="${X(x0 + .25)}" y="${Y(top + 3)}" width="${R2(wd - .5)}" height="3" rx=".4"/>`;
+  for (let i = 0; i < 4; i++) o += `<circle class="e-knob" cx="${X(x0 + wd*(.2 + i*.2))}" cy="${Y(top - 2)}" r=".9"/>`;
+  o += `<rect class="e-handle" x="${X(x0 + 2.5)}" y="${Y(top - 5)}" width="${R2(wd - 5)}" height=".7" rx=".35"/>`;
+  o += `<rect class="e-steel2" x="${X(x0 + 1.5)}" y="${Y(top - 6.5)}" width="${R2(wd - 3)}" height="${R2(top - 6.5 - 6)}" rx=".4"/>`;
+  o += `<rect class="e-glass" x="${X(x0 + 4)}" y="${Y(top - 10)}" width="${R2(wd - 8)}" height="${R2(top - 10 - 13)}" rx=".6"/>`;
+  o += `<rect class="e-steel2" x="${X(x0 + 1.5)}" y="${Y(5)}" width="${R2(wd - 3)}" height="4" rx=".3"/>`;
+  o += `<text class="e-appltext" style="fill:var(--paper)" x="${X(x0 + wd/2)}" y="${Y(top - 17)}">Stove ${fmt(wd, 16)}″</text>`;
+  return o;
+}
+function dwSvg(x0, wd, h, label, X, Y){
+  let o = `<rect class="e-kick" x="${X(x0 + .2)}" y="${Y(4)}" width="${r2(wd - .4)}" height="4"/>`;
+  o += `<rect class="e-steel" x="${X(x0 + .2)}" y="${Y(h)}" width="${r2(wd - .4)}" height="${r2(h - 4)}" rx=".3"/>`;
+  o += `<rect class="e-steel2" x="${X(x0 + .2)}" y="${Y(h)}" width="${r2(wd - .4)}" height="4"/>`;
+  o += `<rect class="e-handle" x="${X(x0 + 3)}" y="${Y(h - 5.4)}" width="${r2(wd - 6)}" height=".7" rx=".35"/>`;
+  o += `<text class="e-appltext" x="${X(x0 + wd/2)}" y="${Y(h/2)}">${esc(label)}</text>`;
+  return o;
+}
+function fridgeSvg(x0, wd, h, label, X, Y){
+  const split = h*.62;
+  let o = `<rect class="e-steel" x="${X(x0 + .3)}" y="${Y(h)}" width="${r2(wd - .6)}" height="${r2(h)}" rx=".8"/>`;
+  o += `<line stroke="var(--steel-edge)" stroke-width=".2" x1="${X(x0 + .3)}" x2="${X(x0 + wd - .3)}" y1="${Y(split)}" y2="${Y(split)}"/>`;
+  o += `<line stroke="var(--steel-edge)" stroke-width=".2" x1="${X(x0 + wd/2)}" x2="${X(x0 + wd/2)}" y1="${Y(h)}" y2="${Y(split)}"/>`;
+  o += `<rect class="e-handle" x="${X(x0 + wd/2 - 2)}" y="${Y(split + 22)}" width=".7" height="18" rx=".35"/><rect class="e-handle" x="${X(x0 + wd/2 + 1.3)}" y="${Y(split + 22)}" width=".7" height="18" rx=".35"/>`;
+  o += `<rect class="e-handle" x="${X(x0 + 4)}" y="${Y(split - 2.5)}" width="${r2(wd - 8)}" height=".7" rx=".35"/>`;
+  o += `<text class="e-appltext" x="${X(x0 + wd/2)}" y="${Y(split/2)}">${esc(label)}</text>`;
+  return o;
+}
+function faucetSvg(cx, X, Y){
+  const t = S.counterH;
+  return `<path class="e-faucet" d="M${X(cx)} ${Y(t)} V${Y(t + 11)} Q${X(cx)} ${Y(t + 14)} ${X(cx + 3)} ${Y(t + 14)} Q${X(cx + 6)} ${Y(t + 14)} ${X(cx + 6)} ${Y(t + 10)}"/>` +
+    `<rect class="e-handle" x="${X(cx - .9)}" y="${Y(t + 1.2)}" width="1.8" height="1.2" rx=".3"/><rect class="e-handle" x="${X(cx - 3.2)}" y="${Y(t + 4.2)}" width="2.4" height=".6" rx=".3"/>`;
+}
+function drawCab(x, x0, yb, X, Y){
+  if (x.gap && x.c.gapRow === 'dw') return dwSvg(x0, x.W, x.H, x.label, X, Y);
+  if (x.gap && x.c.gapRow === 'fridge') return fridgeSvg(x0, x.W, x.H, x.label, X, Y);
+  if (x.gap){
+    return `<rect class="e-gapbox" x="${X(x0)}" y="${Y(yb + x.H)}" width="${r2(x.W)}" height="${r2(x.H)}"/>` +
+      `<text class="e-gaptext" x="${X(x0 + x.W/2)}" y="${r2(Y(yb + x.H/2))}">${esc(x.label)}</text>`;
+  }
+  const off = x.gab ? x.gab.t : 0, wd = x.gab ? x.W : (x.EW || x.W), vertFront = S.drawerGrain === 'vertical';
+  let s = '';
+  if (x.gab) for (const gx of [x0, x0 + off + x.W]) s += `<rect class="e-front" fill="url(#gv)" x="${X(gx)}" y="${Y(yb + x.H)}" width="${r2(off)}" height="${r2(x.gab.H)}"/>`;
+  x0 += off;
+  s += `<rect class="e-box" x="${X(x0)}" y="${Y(yb + x.H)}" width="${r2(wd)}" height="${r2(x.H)}"/>`;
+  if (!x.fronts.length){
+    const t = S.boxT, n = (x.shelfN || 0) + (x.c.type === 'tall' && S.tallFixedShelf ? 1 : 0), sp = (x.H - 2*t)/(n + 1);
+    s += `<rect class="e-inner" x="${X(x0 + t)}" y="${Y(yb + x.H - t)}" width="${r2(wd - 2*t)}" height="${r2(x.H - 2*t)}"/>`;
+    for (let i = 1; i <= n; i++) s += `<rect class="e-shelf" x="${X(x0 + t)}" y="${Y(yb + t + i*sp)}" width="${r2(wd - 2*t)}" height="${r2(t)}"/>`;
+  }
+  for (const f of x.fronts){
+    const fill = f.kind === 'door' || f.kind === 'blind' || vertFront ? 'url(#gv)' : 'url(#gh)';
+    s += `<rect class="e-front" fill="${fill}" x="${X(x0 + f.x)}" y="${Y(yb + f.y + f.h)}" width="${r2(f.w)}" height="${r2(f.h)}"/>`;
+    s += pullSvg(f, x0, yb, X, Y);
+  }
+  return s;
+}
+function renderLine(lower, uppers){
+  const ew = x => x.EW || x.W;
+  const lowLen = lower.reduce((a, x) => a + ew(x), 0);
+  const upLen = uppers.reduce((a, x) => a + ew(x), 0) + lower.filter(x => x.c.type === 'tall').reduce((a, x) => a + x.W, 0);
+  const len = Math.max(lowLen, upLen, 24);
+  const maxY = Math.max(S.upperTop, S.counterH, ...lower.map(x => S.platformH + x.H)) + 3;
+  const mL = 12, mR = 4, mT = 2, mB = 10, vbW = len + mL + mR, vbH = maxY + mT + mB;
+  const X = x => r2(mL + x), Y = y => r2(mT + maxY - y);
+  let o = elevDefs() + elevFrame(len, X, Y, maxY) + `<line class="e-floor" x1="0" x2="${vbW}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  let x0 = 0; const talls = [];
+  for (const x of lower){
+    if (x.c.type === 'tall') talls.push([x0, x0 + x.W]);
+    if (!x.gap) o += `<rect class="e-kick" x="${X(x0)}" y="${Y(S.platformH)}" width="${r2(x.W)}" height="${r2(S.platformH)}"/>`;
+    o += drawCab(x, x0, x.gap ? 0 : S.platformH, X, Y);
+    if (BASE.has(x.c.type)) o += `<rect class="e-counter" x="${X(x0)}" y="${Y(S.platformH + x.H + S.counterT)}" width="${r2(x.W)}" height="${r2(S.counterT)}"/>`;
+    o += `<text class="e-label" x="${X(x0 + x.W/2)}" y="${r2(Y(0) + 3.6)}">${esc(x.id)}</text><text class="e-sub" x="${X(x0 + x.W/2)}" y="${r2(Y(0) + 6.6)}">${fmt(x.W, 16)}″</text>`;
+    x0 += x.W;
+  }
+  x0 = 0;
+  for (const x of uppers){
+    let moved = true;
+    while (moved){ moved = false; for (const [a, b] of talls) if (x0 < b - 1e-6 && x0 + ew(x) > a + 1e-6){ x0 = b; moved = true; } }
+    o += drawCab(x, x0, S.upperTop - x.H, X, Y);
+    o += `<text class="e-label" x="${X(x0 + ew(x)/2)}" y="${r2(Y(S.upperTop) - 1.2)}">${esc(x.id)} · ${fmt(x.W, 16)}″</text>`;
+    x0 += ew(x);
+  }
+  return `<svg viewBox="0 0 ${r2(vbW)} ${r2(vbH)}" style="min-width:${Math.min(Math.max(640, Math.round(vbW*6)), 1400)}px" role="img" aria-label="Front elevation of cabinets not placed on a wall">${o}</svg>`;
+}
+function renderWall(w){
+  const len = w.len;
+  if (!(len > 0)) return '';
+  const fullTops = w.items.filter(i => i.row === 'full').map(i => S.platformH + i.x.H);
+  const maxY = Math.max(S.upperTop, S.counterH, ...fullTops) + 4;
+  const mL = 12, mR = 4, mT = 3, mB = 10, vbW = len + mL + mR, vbH = maxY + mT + mB;
+  const X = x => r2(mL + x), Y = y => r2(mT + maxY - y);
+  const sx = (a, b) => w.key === 'L' ? len - b : a;           // screen-left edge of a span measured from the corner
+  let o = elevDefs() + elevFrame(len, X, Y, maxY);
+  // openings
+  for (const op of w.openings){
+    const x0 = sx(op.a, op.b), wd = op.b - op.a;
+    if (op.kind === 'stove'){
+      const s0 = sx(op.sa, op.sb), sw = op.sb - op.sa;
+      o += stoveSvg(s0, sw, X, Y);
+      o += `<text class="e-sub" x="${X(s0 + sw/2)}" y="${r2(Y(0) + 3.6)}">${fmt(op.sa, 16)}″ from corner</text>`;
+    } else {
+      const y1 = S.counterH + 6, y2 = S.upperTop - 2;
+      o += `<rect class="e-window" x="${X(x0)}" y="${Y(y2)}" width="${r2(wd)}" height="${r2(y2 - y1)}"/>`;
+      o += `<text class="e-wintext" x="${X(x0 + wd/2)}" y="${Y((y1 + y2)/2)}">Window ${fmt(wd, 16)}″</text>`;
+    }
+  }
+  // corner, lower row
+  const t = S.boxT, cornerX = w.key === 'L' ? len : 0;
+  if (w.lowStart > 0){
+    const x0 = sx(0, w.lowStart);
+    o += `<rect class="e-kick" x="${X(x0)}" y="${Y(S.platformH)}" width="${r2(w.lowStart)}" height="${r2(S.platformH)}"/>`;
+    if (w.blind){
+      const F = w.blind.corner.F, fx = sx(w.lowStart - F, w.lowStart), topY = w.blind.H - S.counterGap;
+      o += `<rect class="e-corner" x="${X(sx(0, w.lowStart - F))}" y="${Y(S.platformH + w.blind.H)}" width="${r2(w.lowStart - F)}" height="${r2(w.blind.H)}"/>`;
+      o += `<rect class="e-front" fill="url(#gv)" x="${X(fx)}" y="${Y(S.platformH + topY)}" width="${r2(F)}" height="${r2(topY)}"/>`;
+      o += `<text class="e-walllabel" x="${X(sx(0, w.lowStart - F) + (w.lowStart - F)/2)}" y="${Y(S.platformH + w.blind.H/2)}">${esc(w.blind.id)} side</text>`;
+      o += `<text class="e-walllabel" x="${X(fx + F/2)}" y="${r2(Y(0) + 3.6)}">filler</text>`;
+    } else {
+      o += `<rect class="e-corner" x="${X(x0)}" y="${Y(S.platformH + baseBoxH())}" width="${r2(w.lowStart)}" height="${r2(baseBoxH())}"/>`;
+    }
+  }
+  // corner, upper row
+  if (w.upStart > 0){
+    const x0 = sx(0, w.upStart);
+    if (w.diag){
+      const k = w.diag.corner, H = w.diag.H, yb = S.upperTop - H, e = t/Math.SQRT2;
+      o += `<rect class="e-corner" x="${X(x0)}" y="${Y(S.upperTop)}" width="${r2(w.upStart)}" height="${r2(H)}"/>`;
+      const dx0 = sx(k.d + e, k.L - e), dw = k.L - k.d - 2*e;
+      o += `<rect class="e-front" fill="url(#gv)" opacity=".8" x="${X(dx0)}" y="${Y(yb + H - S.vReveal/2)}" width="${r2(dw)}" height="${r2(H - S.vReveal)}"/>`;
+      o += `<text class="e-label" x="${X(x0 + w.upStart/2)}" y="${r2(Y(S.upperTop) - 1.2)}">${esc(w.diag.id)} · corner</text>`;
+    } else if (w.blindU && w.blindU.c.wall !== w.key){
+      const bu = w.blindU, F = bu.corner.F, fh = bu.H - S.vReveal, yb = S.upperTop - bu.H;
+      o += `<rect class="e-corner" x="${X(sx(0, w.upStart - F))}" y="${Y(S.upperTop)}" width="${r2(w.upStart - F)}" height="${r2(bu.H)}"/>`;
+      o += `<rect class="e-front" fill="url(#gv)" x="${X(sx(w.upStart - F, w.upStart))}" y="${Y(yb + S.vReveal/2 + fh)}" width="${r2(F)}" height="${r2(fh)}"/>`;
+      o += `<text class="e-walllabel" x="${X(sx(0, w.upStart - F) + (w.upStart - F)/2)}" y="${Y(yb + bu.H/2)}">${esc(bu.id)} side</text>`;
+    } else {
+      o += `<rect class="e-corner" x="${X(x0)}" y="${Y(S.upperTop)}" width="${r2(w.upStart)}" height="${r2(S.upperH)}"/>`;
+    }
+  }
+  // cabinets
+  for (const it of w.items){
+    const x = it.x, x0 = sx(it.a, it.b);
+    if (it.row === 'upper' && x.isShelf){
+      o += `<rect class="e-shelf" x="${X(x0)}" y="${Y(x.shelfAt)}" width="${r2(x.W)}" height="${r2(S.boxT)}"/>`;
+      o += `<text class="e-sub" x="${X(x0 + x.W/2)}" y="${r2(Y(x.shelfAt) - 1)}">${esc(x.id)} · shelf at ${fmt(x.shelfAt, 16)}″</text>`;
+      if (x.topAt){
+        o += `<rect class="e-shelf" x="${X(x0)}" y="${Y(x.topAt)}" width="${r2(x.W)}" height="${r2(S.boxT)}"/>`;
+        const open = x.topAt - S.boxT - x.shelfAt;
+        if (open > 3) o += `<text class="e-gaptext" x="${X(x0 + x.W/2)}" y="${Y(x.shelfAt + open/2 - .7)}">${fmt(open, 16)}″ open</text>`;
+      }
+    } else if (it.row === 'upper'){
+      o += drawCab(x, x0, S.upperTop - x.H, X, Y);
+      o += `<text class="e-label" x="${X(x0 + (x.EW || x.W)/2)}" y="${r2(Y(S.upperTop) - 1.2)}">${esc(x.id)} · ${fmt(x.W, 16)}″${x.gab ? ' + gables' : ''}${it.fixed ? ' · fixed' : ''}</text>`;
+    } else if (x.panel){
+      o += `<rect class="e-front" fill="url(#gv)" x="${X(x0)}" y="${Y(x.H)}" width="${r2(Math.max(x.W, .4))}" height="${r2(x.H)}"/>`;
+      o += `<text class="e-sub" x="${X(x0 + x.W/2)}" y="${r2(Y(0) + 3.6)}">${esc(x.id)}</text>`;
+    } else {
+      if (!x.gap) o += `<rect class="e-kick" x="${X(x0)}" y="${Y(S.platformH)}" width="${r2(x.W)}" height="${r2(S.platformH)}"/>`;
+      o += drawCab(x, x0, x.gap ? 0 : S.platformH, X, Y);
+      if (x.c.type === 'base-drawer-door' && x.c.falseFront) o += faucetSvg(x0 + x.W/2, X, Y);
+      o += `<text class="e-label" x="${X(x0 + x.W/2)}" y="${r2(Y(0) + 3.6)}">${esc(x.id)}</text><text class="e-sub" x="${X(x0 + x.W/2)}" y="${r2(Y(0) + 6.6)}">${fmt(x.W, 16)}″${it.fixed ? ' · fixed' : ''}</text>`;
+    }
+  }
+  // countertop: one continuous top over everything at counter height, bridging small gaps, panels and the corner space
+  const ct = [{a:0, b:w.lowStart}];
+  for (const it of w.items) if (it.row === 'base' && (BASE.has(it.x.c.type) || it.x.gap || it.x.panel)) ct.push({a:it.a, b:it.b});
+  ct.sort((p, q) => p.a - q.a);
+  const runs = [];
+  for (const iv of ct){ const r = runs[runs.length - 1]; if (r && iv.a <= r.b + 3) r.b = Math.max(r.b, iv.b); else runs.push({a:iv.a, b:iv.b}); }
+  const stops = [].concat(w.items.filter(i => i.row === 'full' && !(i.x.gap && i.x.c.gapRow === 'fridge')).map(i => [i.a, i.b]));
+  const touches = v => stops.some(([p, q]) => Math.abs(p - v) < .5 || Math.abs(q - v) < .5);
+  w.counterRuns = [];
+  for (const r of runs){
+    if (r.b - r.a <= .01) continue;
+    const a = r.a <= .01 || touches(r.a) ? r.a : r.a - S.counterOverhang;
+    const b = touches(r.b) ? r.b : r.b + S.counterOverhang;
+    w.counterRuns.push(b - a);
+    o += `<rect class="e-counter" x="${X(sx(a, b))}" y="${Y(S.counterH)}" width="${r2(b - a)}" height="${r2(S.counterT)}"/>`;
+  }
+  // gaps from openings
+  for (const g of w.gaps){
+    const x0 = sx(g.a, g.b), wd = g.b - g.a, yc = g.row === 'upper' ? S.upperTop - 8 : S.counterH - 8;
+    o += g.corner
+      ? `<text class="e-gaptext" x="${X(x0 + wd/2)}" y="${Y(yc)}">${fmt(wd)}″</text><text class="e-gaptext" x="${X(x0 + wd/2)}" y="${Y(yc - 2.6)}">spare</text>`
+      : `<text class="e-warn" x="${X(x0 + wd/2)}" y="${Y(yc)}">${fmt(wd)}″</text>`;
+  }
+  if (w.winCenter !== undefined){
+    const cx = w.key === 'L' ? len - w.winCenter : w.winCenter;
+    o += `<line class="e-tick" style="stroke:var(--accent)" x1="${X(cx)}" x2="${X(cx)}" y1="${Y(1)}" y2="${Y(S.upperTop - 2)}"/>`;
+  }
+  // leftover / overrun
+  const remLabel = (end, y) => {
+    const rem = len - end;
+    if (rem < -1e-6) return `<text class="e-bad" x="${X(w.key === 'L' ? 6 : len - 6)}" y="${Y(y)}">${fmt(-rem)}″ too long</text>`;
+    if (rem < 10) return '';
+    const x0 = sx(end, len);
+    return `<text class="e-gaptext" x="${X(x0 + rem/2)}" y="${Y(y)}">${fmt(rem)}″ open</text>`;
+  };
+  o += remLabel(w.lowEnd, S.counterH/2) + remLabel(w.upEnd, S.upperTop - S.upperH/2);
+  // walls and floor
+  o += `<line class="e-floor" x1="${X(-2)}" x2="${X(len + 2)}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  o += `<line class="e-wall" x1="${X(0)}" x2="${X(0)}" y1="${Y(0)}" y2="${Y(maxY - 1)}"/><line class="e-wall" x1="${X(len)}" x2="${X(len)}" y1="${Y(0)}" y2="${Y(maxY - 1)}"/>`;
+  o += `<text class="e-walllabel" x="${X(cornerX)}" y="${Y(maxY - .2)}">corner</text>`;
+  const rl = len - w.lowEnd, ru = len - w.upEnd;
+  const sum = `<span class="note mono">${fmt(len)}″ wall · bases end at ${fmt(w.lowEnd)}″ (${rl >= 0 ? fmt(rl) + '″ left' : fmt(-rl) + '″ over'}) · uppers end at ${fmt(w.upEnd)}″ (${ru >= 0 ? fmt(ru) + '″ left' : fmt(-ru) + '″ over'})</span>`;
+  const sinkTxt = w.sinkOff === undefined ? '' : Math.abs(w.sinkOff) <= 1/32
+    ? `<span class="note mono" style="color:var(--accent)">sink centered on window (${fmt(w.winCenter)}″ from corner)</span>`
+    : `<span class="note mono" style="color:var(--warn)">sink ${fmt(Math.abs(w.sinkOff))}″ off the window center</span>`;
+  return `<div class="wallcard"><div class="wallsum"><h3>${esc(w.name)}</h3>${sum}${sinkTxt}</div><div class="scroll"><svg viewBox="0 0 ${r2(vbW)} ${r2(vbH)}" style="min-width:${Math.min(Math.max(640, Math.round(vbW*6)), 1400)}px" role="img" aria-label="${esc(w.name)} elevation">${o}</svg></div></div>`;
+}
+function renderElevation(R){
+  const W = R.walls;
+  let html = renderWall(W.L) + renderWall(W.R);
+  const un = R.cabs.filter(x => x.ok && !(x.c.wall === 'L' || x.c.wall === 'R') && rowOf(x.c) && rowOf(x.c) !== 'corner');
+  const lower = un.filter(x => ['base','full'].includes(rowOf(x.c)) && !x.panel), uppers = un.filter(x => rowOf(x.c) === 'upper');
+  if (lower.length || uppers.length) html += `<div class="wallcard"><div class="wallsum"><h3>Not on a wall</h3><span class="note">Set a wall for these to place them.</span></div><div class="scroll">${renderLine(lower, uppers)}</div></div>`;
+  $('#elev').innerHTML = html || '<p class="muted" style="margin:0">Add a cabinet to see the walls.</p>';
+}
+function pullSvg(f, ox, oy, X, Y){
+  const L = S.pullLen, th = .55, inset = 1.75;
+  if (f.kind === 'blind') return '';
+  if (f.kind === 'door'){
+    const px = f.pull === 'left' ? f.x + inset : f.x + f.w - inset;
+    let cy = f.y + f.h/2;
+    if (f.pv === 'top') cy = f.y + f.h - inset - L/2;
+    if (f.pv === 'bottom') cy = f.y + inset + L/2;
+    return `<rect class="e-pull" rx=".2" x="${X(ox + px - th/2)}" y="${Y(oy + cy + L/2)}" width="${th}" height="${r2(L)}"/>`;
+  }
+  const n = f.w > S.pullDoubleOver ? 2 : 1, cy = f.y + f.h/2;
+  let s = '';
+  for (let i = 0; i < n; i++){
+    const cx = n === 1 ? f.x + f.w/2 : f.x + f.w*(i ? .75 : .25);
+    s += `<rect class="e-pull" rx=".2" x="${X(ox + cx - L/2)}" y="${Y(oy + cy + th/2)}" width="${r2(L)}" height="${th}"/>`;
+  }
+  return s;
+}
+
+/* ---------- rendering: corner plans ---------- */
+function pRect(mx, x1, y1, x2, y2, cls){
+  const a = mx(x1), b = mx(x2);
+  return `<rect class="${cls}" x="${r2(Math.min(a, b))}" y="${r2(Math.min(y1, y2))}" width="${r2(Math.abs(b - a))}" height="${r2(Math.abs(y2 - y1))}"/>`;
+}
+function dimH(mx, x1, x2, y, label, below){
+  const a = mx(x1), b = mx(x2), k = .8;
+  return `<line class="p-dim" x1="${r2(a)}" x2="${r2(b)}" y1="${r2(y)}" y2="${r2(y)}"/>` +
+    `<line class="p-dim" x1="${r2(a)}" x2="${r2(a)}" y1="${r2(y - k)}" y2="${r2(y + k)}"/><line class="p-dim" x1="${r2(b)}" x2="${r2(b)}" y1="${r2(y - k)}" y2="${r2(y + k)}"/>` +
+    `<text class="p-dimtext" x="${r2((a + b)/2)}" y="${r2(below ? y + 2.3 : y - .9)}">${esc(label)}</text>`;
+}
+function dimV(mx, x, y1, y2, label, dir){
+  const a = mx(x), k = .8;
+  return `<line class="p-dim" x1="${r2(a)}" x2="${r2(a)}" y1="${r2(y1)}" y2="${r2(y2)}"/>` +
+    `<line class="p-dim" x1="${r2(a - k)}" x2="${r2(a + k)}" y1="${r2(y1)}" y2="${r2(y1)}"/><line class="p-dim" x1="${r2(a - k)}" x2="${r2(a + k)}" y1="${r2(y2)}" y2="${r2(y2)}"/>` +
+    `<text class="p-dimtext" style="text-anchor:${dir < 0 ? 'end' : 'start'}" x="${r2(a + dir*1.1)}" y="${r2((y1 + y2)/2 + .6)}">${esc(label)}</text>`;
+}
+function vb(mx, x1, x2, y1, y2){ const a = mx(x1), b = mx(x2); return `${r2(Math.min(a, b))} ${r2(y1)} ${r2(Math.abs(b - a))} ${r2(y2 - y1)}`; }
+function blindPlan(x){
+  const k = x.corner, t = S.boxT, D2 = k.upper ? S.upperD : S.baseD, er = S.edgeReveal, gap = S.frontGap, ghost = 16, o = k.gap || 0;
+  const PW = o + k.W + 6, PH = k.y0 + ghost + 2;
+  const mx = v => k.right ? PW - v : v, out = k.right ? 1 : -1;
+  const dx1 = o + k.blindX + gap/2, dx2 = o + k.W - er, dw = dx2 - dx1, fy = k.D + t;
+  let g = '';
+  g += `<line class="p-wall" x1="${r2(mx(-.55))}" y1="-.55" x2="${r2(mx(PW))}" y2="-.55"/><line class="p-wall" x1="${r2(mx(-.55))}" y1="-.55" x2="${r2(mx(-.55))}" y2="${r2(PH)}"/>`;
+  g += pRect(mx, o, 0, o + k.W, k.D, 'p-box');
+  g += `<text class="p-label" x="${r2(mx(o + (k.blindX + k.W)/2))}" y="${r2(k.D/2)}">${esc(x.id)}</text>`;
+  g += `<text class="p-note" x="${r2(mx(o + k.blindX/2 + 1))}" y="${r2(k.D/2)}">blind space</text>`;
+  g += pRect(mx, o, k.D, o + k.blindW, fy, 'p-front');
+  g += pRect(mx, dx1, k.D, dx2, fy, 'p-front');
+  if (dw > 0) g += k.flip
+    ? `<path class="p-arc" d="M${r2(mx(dx2))} ${r2(fy)} A${r2(dw)} ${r2(dw)} 0 0 ${k.right ? 0 : 1} ${r2(mx(dx1))} ${r2(fy + dw)} L${r2(mx(dx1))} ${r2(fy)}"/>`
+    : `<path class="p-arc" d="M${r2(mx(dx1))} ${r2(fy)} A${r2(dw)} ${r2(dw)} 0 0 ${k.right ? 1 : 0} ${r2(mx(dx2))} ${r2(fy + dw)} L${r2(mx(dx2))} ${r2(fy)}"/>`;
+  g += pRect(mx, 0, k.y0, D2, k.y0 + ghost, 'p-ghost');
+  g += pRect(mx, D2, k.y0 + er, D2 + t, k.y0 + ghost, 'p-ghost');
+  g += `<text class="p-note" x="${r2(mx(D2/2))}" y="${r2(k.y0 + ghost/2)}">first cabinet,</text><text class="p-note" x="${r2(mx(D2/2))}" y="${r2(k.y0 + ghost/2 + 2)}">other wall</text>`;
+  g += pRect(mx, D2 - 3, k.y0 - t, D2, k.y0, 'p-front');
+  g += pRect(mx, D2, fy, D2 + t, k.y0, 'p-filler');
+  g += dimH(mx, o, o + k.W, -3, `${fmt(k.W)} box`);
+  if (dw > 0) g += dimH(mx, dx1, dx2, fy + 1.6, `door ${fmt(dw)}`, true);
+  g += dimH(mx, D2 + t, o + k.blindW, fy + 4.6, fmt(o + k.blindW - D2 - t), true);
+  g += dimV(mx, -3, 0, k.y0, fmt(k.y0), out);
+  const side = k.right ? 'right' : 'left', other = k.right ? 'left' : 'right';
+  return `<div class="cornercard"><h3>${esc(x.id)} · blind corner ${k.upper ? 'upper' : 'base'}</h3>
+    <svg viewBox="${vb(mx, -15, PW + 1, -6, PH + 1)}" role="img" aria-label="Plan view of the ${esc(x.id)} blind corner">${g}</svg>
+    <ol class="steps">
+      <li>Set ${esc(x.id)} tight against the cabinet beside it, with its ${side} end toward the corner. ${o > 1/64 ? `That leaves <b class="mono">${fmt(o)}″</b> between its end and the other wall, hidden behind the other wall's cabinets${k.upper ? '' : ' and under the countertop'}.` : 'Its end sits right against the other wall.'} The ${fmt(k.blindW)}″ blind panel covers the blind end of the box.</li>
+      <li>Start the first cabinet on the other wall <b class="mono">${fmt(k.y0)}″</b> out from the wall ${esc(x.id)} sits on, not tight to it.</li>
+      <li>That leaves a ${fmt(k.F)}″ gap, which the corner filler covers. Screw the filler cleat to the side of that first cabinet and glue the filler to it, flush with its fronts. The filler keeps the two cabinets' pulls and drawers from hitting each other.</li>
+      <li>${k.flip ? `Hinge the door on the ${side} end, next to the corner. It opens toward the other wall, so check that it clears the pulls there; a wider filler gives it more room.` : `Hinge the door on the ${other} end, away from the corner, so it swings clear.`} You reach the blind space through the ${fmt(dw)}″ door opening.</li>
+      ${k.upper ? '' : `<li>Build the platform as an L under this corner, set back ${fmt(S.kickSetback)}″ on both faces, so the toe kick turns the corner.</li>`}
+    </ol></div>`;
+}
+function diagPlan(x){
+  const k = x.corner, t = S.boxT, L = k.L, d = k.d, nb = 12, s = Math.SQRT2;
+  const mx = v => v, e = t/s, o = t/s;
+  let g = '';
+  g += `<line class="p-wall" x1="-.55" y1="-.55" x2="${r2(L + nb + 2)}" y2="-.55"/><line class="p-wall" x1="-.55" y1="-.55" x2="-.55" y2="${r2(L + nb + 2)}"/>`;
+  g += `<polygon class="p-box" points="0,0 ${r2(L)},0 ${r2(L)},${r2(d)} ${r2(d)},${r2(L)} 0,${r2(L)}"/>`;
+  const A = [L - e, d + e], B = [d + e, L - e];
+  g += `<polygon class="p-front" points="${r2(A[0])},${r2(A[1])} ${r2(B[0])},${r2(B[1])} ${r2(B[0] + o)},${r2(B[1] + o)} ${r2(A[0] + o)},${r2(A[1] + o)}"/>`;
+  g += pRect(mx, L, 0, L + nb, d, 'p-ghost') + pRect(mx, 0, L, d, L + nb, 'p-ghost');
+  g += `<text class="p-note" x="${r2(L + nb/2)}" y="${r2(d/2 + .5)}">next upper</text><text class="p-note" x="${r2(d/2)}" y="${r2(L + nb/2)}">next upper</text>`;
+  g += `<text class="p-label" x="${r2(L*.36)}" y="${r2(L*.38)}">${esc(x.id)}</text>`;
+  g += dimH(mx, 0, L, -3, fmt(L)) + dimV(mx, -3, 0, L, fmt(L), -1);
+  const m = (L + d)/2 + o + 2.2;
+  g += `<text class="p-dimtext" x="${r2(m + .8)}" y="${r2(m + .8)}">door ${fmt(k.dw)}</text>`;
+  return `<div class="cornercard"><h3>${esc(x.id)} · diagonal corner upper</h3>
+    <svg viewBox="-10 -6 ${r2(L + nb + 13)} ${r2(L + nb + 9)}" role="img" aria-label="Plan view of the ${esc(x.id)} diagonal corner upper">${g}</svg>
+    <ol class="steps">
+      <li>It takes <b class="mono">${fmt(L)}″</b> along each wall. The next uppers start ${fmt(L)}″ from the corner on both walls.</li>
+      <li>The sides are ${fmt(d)}″ deep like the uppers beside them. Bevel each side's front edge at 45° (blade tilted to 45°) so the angled front is flat.</li>
+      <li>The top, bottom and shelves are squares with one corner cut off. The cut list gives the square size and how far along each edge to cut.</li>
+      <li>The door meets the sides at 135°, so standard hinges won't work. Use +45° angled hinges, or glue beveled blocks inside the sides so standard plates sit parallel to the door.</li>
+      <li>It has two backs, one on each wall. The second back butts against the first.</li>
+    </ol></div>`;
+}
+function renderCorner(R){
+  const cs = R.cabs.filter(x => x.ok && x.corner);
+  $('#cornerPanel').hidden = !cs.length;
+  $('#corner').innerHTML = cs.map(x => x.corner.type === 'blind' ? blindPlan(x) : diagPlan(x)).join('');
+}
+
+/* ---------- rendering: editor ---------- */
+function sel(u, f, val, opts, label){
+  return `<select class="sel" id="c${u}-${f}" data-u="${u}" data-f="${f}" aria-label="${esc(label)}">` +
+    opts.map(([v, l]) => `<option value="${esc(v)}"${String(val) === String(v) ? ' selected' : ''}>${esc(l)}</option>`).join('') + '</select>';
+}
+function inp(u, f, val, ph, label, cls='in dim'){
+  const bad = cls.includes('dim') && String(val).trim() !== '' && !okDim(parseDim(val));
+  return `<input class="${cls}" id="c${u}-${f}" data-u="${u}" data-f="${f}" value="${esc(val)}" placeholder="${esc(ph)}" aria-label="${esc(label)}" autocomplete="off"${cls.includes('name') ? '' : ' inputmode="decimal"'}${bad ? ' aria-invalid="true"' : ''}>`;
+}
+const DOOR_OPTS = [['auto','Doors: auto'],['1L','1 door · hinge left'],['1R','1 door · hinge right'],['2','Pair of doors'],['0','No doors (open)']];
+function frontsCell(c, id){
+  const u = c.uid;
+  switch (c.type){
+    case 'base-blind':
+      return `<div class="fronts">${c.wall === 'L' || c.wall === 'R' ? '<span class="note">Blind end faces the corner</span>' : sel(u,'blindSide',c.blindSide,[['right','Blind end: right'],['left','Blind end: left']],`${id} which end goes into the corner`)}` +
+        `<label>Filler ${inp(u,'filler',c.filler,'3',`${id} corner filler width`)}</label>` +
+        sel(u,'topMode',c.topMode,[['drawer','Drawer over door'],['false','False front over door'],['none','Full-height door']],`${id} top front`) +
+        (c.topMode !== 'none' ? `<label>Top front ${inp(u,'topFront',c.topFront,'6',`${id} top front height`)}</label>` : '') +
+        `<label><input type="checkbox" id="c${u}-hingeFlip" data-u="${u}" data-f="hingeFlip"${c.hingeFlip ? ' checked' : ''}> Flip door swing</label></div>`;
+    case 'gap':
+      return `<div class="fronts">${sel(u,'gapRow',c.gapRow,[['dw','Dishwasher'],['fridge','Fridge (floor to top)'],['base','Open space, base row'],['upper','Open space, upper row'],['full','Open space, floor to top']],`${id} what goes here`)}</div>`;
+    case 'shelf':
+      return `<div class="fronts"><span class="note">Height is the top of the shelf, from the floor. Width is the space between the gables.</span>` +
+        `<label><input type="checkbox" id="c${u}-withTop" data-u="${u}" data-f="withTop"${c.withTop ? ' checked' : ''}> Top between the gables</label></div>`;
+    case 'upper-blind':
+      return `<div class="fronts">${c.wall === 'L' || c.wall === 'R' ? '<span class="note">Blind end faces the corner</span>' : sel(u,'blindSide',c.blindSide,[['right','Blind end: right'],['left','Blind end: left']],`${id} which end goes into the corner`)}` +
+        `<label>Filler ${inp(u,'filler',c.filler,'3',`${id} corner filler width`)}</label>` +
+        `<label><input type="checkbox" id="c${u}-hingeFlip" data-u="${u}" data-f="hingeFlip"${c.hingeFlip ? ' checked' : ''}> Flip door swing</label></div>`;
+    case 'upper-diag':
+      return `<div class="fronts"><span class="note">Width is the size along each wall. Depth matches the uppers beside it.</span>` +
+        `<label><input type="checkbox" id="c${u}-hingeFlip" data-u="${u}" data-f="hingeFlip"${c.hingeFlip ? ' checked' : ''}> Flip door swing</label></div>`;
+    case 'upper':
+      return `<div class="fronts">${sel(u,'doors',c.doors,DOOR_OPTS,`${id} doors`)}` +
+        `<label><input type="checkbox" id="c${u}-gables" data-u="${u}" data-f="gables"${c.gables ? ' checked' : ''}> Gables on both ends</label>` +
+        (c.gables ? `<label>Gable depth ${inp(u,'gableD',c.gableD,fmt(S.upperD + S.boxT),`${id} gable depth`)}</label><label>Gable height ${inp(u,'gableH',c.gableH,fmt(S.upperH),`${id} gable height`)}</label>` : '') + '</div>';
+    case 'base-doors':
+      return `<div class="fronts">${sel(u,'doors',c.doors,DOOR_OPTS,`${id} doors`)}</div>`;
+    case 'base-drawers':
+      return `<div class="fronts"><label>Drawers ${inp(u,'drawers',c.drawers,'3',`${id} number of drawers`,'in tiny')}</label>` +
+        `<label>Top front ${inp(u,'topFront',c.topFront,'equal',`${id} top drawer front height`)}</label></div>`;
+    case 'base-drawer-door':
+      return `<div class="fronts"><label>Top front ${inp(u,'topFront',c.topFront,'6',`${id} top front height`)}</label>` +
+        sel(u,'doors',c.doors,DOOR_OPTS,`${id} doors`) +
+        `<label><input type="checkbox" id="c${u}-falseFront" data-u="${u}" data-f="falseFront"${c.falseFront ? ' checked' : ''}> False front (sink)</label></div>`;
+    case 'tall':
+      return `<div class="fronts">${sel(u,'doors',c.doors,DOOR_OPTS,`${id} doors`)}` +
+        sel(u,'rows',c.rows,[['1','One tall door'],['2','Stacked doors']],`${id} door rows`) +
+        (c.rows === '2' ? `<label>Lower door ${inp(u,'lowerDoor',c.lowerDoor,fmt(autoLower()),`${id} lower door height`)}</label>` : '') + '</div>';
+    case 'panel':
+      return `<div class="fronts">${sel(u,'mat',c.mat,[['box','3/4″ maple'],['back','1/4″ ply'],['drw','1/2″ drawer stock']],`${id} material`)}` +
+        `<label>Qty ${inp(u,'qty',c.qty,'1',`${id} quantity`,'in tiny')}</label>` +
+        sel(u,'band',c.band,BAND_LABELS,`${id} edge banding`) + '</div>';
+  }
+  return '';
+}
+let viewWall = 'L', viewRow = 'base';
+try { const v = JSON.parse(localStorage.getItem(STORE + '-view') || 'null'); if (v){ viewWall = v.w ?? 'L'; viewRow = v.r || 'base'; } } catch (e) {}
+const isUpperRow = c => UPPER.has(c.type) || c.type === 'shelf' || (c.type === 'gap' && c.gapRow === 'upper');
+function vis(c){
+  const placed = c.wall === 'L' || c.wall === 'R';
+  const wallOk = viewWall === 'all' || (viewWall === '' ? (!placed && c.type !== 'upper-diag') : (c.wall === viewWall || c.type === 'upper-diag'));
+  const rowOk = viewRow === 'all' || (viewRow === 'upper') === isUpperRow(c);
+  return wallOk && rowOk;
+}
+function renderView(){
+  document.querySelectorAll('#segWall button').forEach(b => b.setAttribute('aria-checked', b.dataset.vw === viewWall ? 'true' : 'false'));
+  document.querySelectorAll('#segRow button').forEach(b => b.setAttribute('aria-checked', b.dataset.vr === viewRow ? 'true' : 'false'));
+  document.querySelectorAll('[data-add]').forEach(b => { b.hidden = viewRow !== 'all' && b.dataset.row !== viewRow; });
+  try { localStorage.setItem(STORE + '-view', JSON.stringify({w:viewWall, r:viewRow})); } catch (e) {}
+}
+function renderEditor(){
+  const active = document.activeElement && document.activeElement.id;
+  const ids = computeIds();
+  const shown = cabs.map((c, i) => vis(c) ? i : -1).filter(i => i >= 0);
+  let h = `<thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Wall</th><th>From corner</th><th>Width</th><th>Height</th><th>Depth</th><th>Fronts</th><th>Shelves</th><th><span class="muted">Move · copy · delete</span></th></tr></thead><tbody>`;
+  if (!shown.length){
+    const where = viewWall === 'L' ? ' on the left wall' : viewWall === 'R' ? ' on the right wall' : viewWall === '' ? ' that are not placed on a wall' : '';
+    const what = viewRow === 'base' ? 'base row pieces' : viewRow === 'upper' ? 'uppers' : 'cabinets';
+    h += `<tr><td colspan="11" class="muted" style="padding:16px 6px">No ${what}${where} yet. Use the Add buttons below.</td></tr>`;
+  }
+  cabs.forEach((c, i) => {
+    if (!vis(c)) return;
+    const si = shown.indexOf(i);
+    const u = c.uid, id = ids[i], panel = c.type === 'panel', gap = c.type === 'gap';
+    const onWall = panel && (c.wall === 'L' || c.wall === 'R');
+    const POS = [['flow','In list order'],['window','Fixed: centered on window'],['stove','Fixed: centered on stove'],['follow','Fixed: right after the fixed piece above'],['at','Fixed: distance from corner']];
+    const SNAP = [['auto','Snap: automatic'],['left','Snap left ←'],['right','Snap right →']];
+    const POSL = isUpperRow(c) ? POS.concat([['align','Fixed: line up with a base cabinet']]) : POS;
+    const alignCtl = c.pos === 'align' && isUpperRow(c)
+      ? sel(u,'alignTo',c.alignTo,[['','Pick a base cabinet…']].concat(cabs.filter(x => x.wall === c.wall && !isUpperRow(x) && x.type !== 'upper-diag').map(x => [x.key, `${ids[cabs.indexOf(x)]} · ${x.name || TYPES[x.type]}`])),`${id} base cabinet to line up with`)
+        + sel(u,'alignSide',c.alignSide,[['left','Left edges line up'],['right','Right edges line up'],['center','Centered over it']],`${id} which edges line up, as you face the wall`)
+      : '';
+    const posCtl = (c.wall === 'L' || c.wall === 'R') ? sel(u,'pos',c.pos,POSL,`${id} position`) + (c.pos === 'at' ? inp(u,'posAt',c.posAt,'from corner',`${id} distance from the corner`) : '') + alignCtl
+      + ((c.pos || 'flow') === 'flow' ? sel(u,'snap',c.snap,SNAP,`${id} which side to pull tight to, as you face the wall`) : '') : '';
+    const wallCell = c.type === 'upper-diag' ? '<span class="note">Corner</span>'
+      : `<div class="fronts" style="flex-direction:column;align-items:flex-start;gap:4px">${panel ? sel(u,'wall',c.wall,[['','Not placed'],['L','Left'],['R','Right']],`${id} wall, for end panels`) : sel(u,'wall',c.wall,[['L','Left'],['R','Right'],['','Not placed']],`${id} wall`)}${posCtl}</div>`;
+    const hasShelves = ['base-doors','base-blind','upper','upper-diag','upper-blind','tall'].includes(c.type) || c.type === 'base-drawer-door';
+    const defShelves = c.type === 'base-doors' || c.type === 'base-drawer-door' || c.type === 'base-blind' ? 1 : c.type === 'tall' ? 4 : (() => { const H = dimOr(c.h, autoH('upper')); return H <= 24 ? 1 : H <= 36 ? 2 : 3; })();
+    h += `<tr>
+      <td class="cid">${esc(id)}</td>
+      <td>${inp(u,'name',c.name,TYPES[c.type],`${id} name`,'in name')}</td>
+      <td>${sel(u,'type',c.type,Object.entries(TYPES),`${id} type`)}</td>
+      <td>${wallCell}</td>
+      <td class="where" data-where="${u}">—</td>
+      <td>${onWall ? `<span class="note mono">${fmt(matInfo(c.mat).t * Math.max(1, parseInt(c.qty, 10) || 1))} thick</span>` : inp(u,'w',c.w,'',`${id} width`)}</td>
+      <td>${gap ? '<span class="muted">—</span>' : inp(u,'h',c.h,c.type === 'shelf' ? '72' : panel ? (onWall ? 'height' : 'length') : fmt(autoH(c.type)),`${id} ${c.type === 'shelf' ? 'shelf height from the floor' : panel ? (onWall ? 'height' : 'length (grain)') : 'height'}`)}</td>
+      <td>${onWall ? inp(u,'w',c.w,'',`${id} depth`) : panel || gap ? '<span class="muted">—</span>' : inp(u,'d',c.d,c.type === 'shelf' ? '24' : fmt(autoD(c.type)),`${id} depth`)}</td>
+      <td>${frontsCell(c, id)}</td>
+      <td>${hasShelves ? inp(u,'shelves',c.shelves,String(defShelves),`${id} adjustable shelves`,'in tiny') : '<span class="muted">—</span>'}</td>
+      <td><div class="rowacts">
+        <button class="icon" type="button" data-act="up" data-u="${u}" aria-label="Move ${esc(id)} up"${si === 0 ? ' disabled' : ''}>↑</button>
+        <button class="icon" type="button" data-act="down" data-u="${u}" aria-label="Move ${esc(id)} down"${si === shown.length - 1 ? ' disabled' : ''}>↓</button>
+        <button class="icon" type="button" data-act="dup" data-u="${u}" aria-label="Duplicate ${esc(id)}">⧉</button>
+        <button class="icon del" type="button" data-act="del" data-u="${u}" aria-label="Delete ${esc(id)}">✕</button>
+      </div></td></tr>`;
+  });
+  $('#editor').innerHTML = h + '</tbody>';
+  if (lastR) fillWhere(lastR);
+  if (active){ const el = document.getElementById(active); if (el && $('#editor').contains(el)) el.focus(); }
+}
+
+/* ---------- rendering: cut list ---------- */
+function bandText(b){
+  if (b.x) return 'angled edge';
+  if (!b.l && !b.w) return '<span class="muted">—</span>';
+  if (b.l === 2 && b.w === 2) return 'all 4 edges';
+  const p = [];
+  if (b.l) p.push(`${b.l} long`);
+  if (b.w) p.push(`${b.w} short`);
+  return p.join(' + ');
+}
+function cabsText(g){ return [...g.cabs.entries()].map(([id, q]) => q > 1 && g.qty !== q * g.cabs.size ? `${id}×${q}` : id).join(', '); }
+function renderFilter(R){
+  const cur = filterCab;
+  const opts = [['all','All cabinets, identical parts combined']].concat(R.cabs.map(x => [x.id, `${x.id} · ${x.label}`]));
+  if (!opts.some(o => o[0] === cur)) filterCab = 'all';
+  $('#cabFilter').innerHTML = opts.map(([v, l]) => `<option value="${esc(v)}"${v === filterCab ? ' selected' : ''}>${esc(l)}</option>`).join('');
+}
+function renderCutList(R){
+  const w = R.warns.slice().sort((a,b) => (a.lvl === 'bad' ? 0 : 1) - (b.lvl === 'bad' ? 0 : 1));
+  $('#warns').innerHTML = w.map(x => `<div class="warn${x.lvl === 'bad' ? ' bad' : ''}"><b>${esc(x.id)}</b> ${esc(x.msg)}</div>`).join('');
+  let out = '';
+  if (!R.groups.length){ $('#cutlist').innerHTML = '<p class="muted" style="margin:0">Nothing to cut yet.</p>'; return; }
+  if (filterCab === 'all'){
+    const counts = MAT_ORDER.filter(m => R.nests[m]).map(m => `${matInfo(m).nominal}: <b>${sheetsFor(R, m).length}</b>`).join(' · ');
+    out += `<div class="grainbar"><p class="note" style="margin:0">Tick <b>Ignore</b> on parts where grain direction doesn't matter. The sheet layouts can then turn those parts sideways to fit more on each sheet. Sheets right now: ${counts}.</p>
+      <div class="actions"><button class="btn small" type="button" data-grain="hidden">Ignore grain on hidden parts</button><button class="btn small" type="button" data-grain="reset">Respect grain everywhere</button></div></div>`;
+    for (const m of MAT_ORDER){
+      const gs = R.byMat[m]; if (!gs) continue;
+      const mi = matInfo(m), n = sheetsFor(R, m).length, pcs = gs.reduce((a, g) => a + g.qty, 0);
+      out += `<div class="scroll"><table class="cl"><caption><div class="matsum"><h3>${esc(mi.nominal)} ${esc(mi.name)}</h3>
+        <span class="note mono">${fmt(mi.t, 64)}″ actual · ${pcs} parts · ${n} sheet${n === 1 ? '' : 's'} of ${fmt(mi.L)} × ${fmt(mi.W)}</span></div></caption>
+        <thead><tr><th>#</th><th>Part</th><th style="text-align:right">Qty</th><th>Length (grain)</th><th>Width</th><th>Edge band</th><th>Grain</th><th>Cabinets</th><th>Notes</th></tr></thead><tbody>`;
+      for (const g of gs){
+        out += `<tr><td class="num"><span class="tag">${g.num}</span></td><td>${esc(g.name)}</td><td class="qty">${g.qty}</td>
+          <td class="dim">${fmt(g.L)}</td><td class="dim">${fmt(g.W)}</td><td>${bandText(g.band)}</td>
+          <td><label class="gr" title="${g.baseRot ? 'Set for the whole material under Construction rules' : 'Let the sheet layouts turn this part sideways'}"><input type="checkbox" id="gr-${g.num}" data-gk="${esc(g.gk)}"${g.rot ? ' checked' : ''}${g.baseRot ? ' disabled' : ''}> Ignore</label></td>
+          <td class="note mono">${esc(cabsText(g))}</td><td class="note">${esc([...g.notes].join('; '))}</td></tr>`;
+      }
+      out += '</tbody></table></div>';
+    }
+  } else {
+    const x = R.cabs.find(c => c.id === filterCab);
+    if (x){
+      out += `<div class="scroll"><table class="cl"><caption><div class="matsum"><h3>${esc(x.id)} · ${esc(x.label)}</h3>
+        <span class="note mono">${x.c.type === 'panel' ? '' : `${fmt(x.W)} W × ${fmt(x.H)} H × ${fmt(x.D)} D box`}</span></div></caption>
+        <thead><tr><th>#</th><th>Part</th><th>Material</th><th style="text-align:right">Qty</th><th>Length (grain)</th><th>Width</th><th>Edge band</th><th>Notes</th></tr></thead><tbody>`;
+      for (const p of x.parts){
+        out += `<tr><td class="num"><span class="tag">${R.numByKey.get(p.key)}</span></td><td>${esc(p.name)}</td><td class="note">${esc(matInfo(p.mat).nominal)}</td><td class="qty">${p.qty}</td>
+          <td class="dim">${fmt(p.L)}</td><td class="dim">${fmt(p.W)}</td><td>${bandText(p.band)}</td><td class="note">${esc(p.note)}</td></tr>`;
+      }
+      out += '</tbody></table></div>';
+    }
+  }
+  const active = document.activeElement && document.activeElement.id;
+  $('#cutlist').innerHTML = out;
+  if (active && active.startsWith('gr-')){ const el = document.getElementById(active); if (el) el.focus(); }
+}
+
+/* ---------- rendering: sheets ---------- */
+/* ---------- sheet optimizer: runs in a background worker, only on click ---------- */
+function workerMain(){
+  const now = () => (self.performance ? performance.now() : Date.now());
+  function pack(items, job, tol){
+    const SL = job.SL, SW = job.SW, k = job.kerf, E = 1e-6, sheets = [];
+    const newStrip = (sh, w) => { const st = {y: sh.usedW, w, usedL: 0, segs: []}; sh.strips.push(st); sh.usedW += w + k; return st; };
+    const placeSeg = (st, sg, L, W, num) => { sg.items.push({x: sg.x, y: st.y + sg.usedW, L, W, num}); sg.usedW += W + k; };
+    const newSeg = (st, L, W, num) => { const sg = {x: st.usedL, L, usedW: 0, items: []}; st.segs.push(sg); st.usedL += L + k; placeSeg(st, sg, L, W, num); };
+    for (const it of items){
+      const ors = it.rot && Math.abs(it.L - it.W) > E ? (it.flip ? [[it.W, it.L], [it.L, it.W]] : [[it.L, it.W], [it.W, it.L]]) : [[it.L, it.W]];
+      let b1 = null, b2 = null, b3 = null;
+      for (const sh of sheets) for (const st of sh.strips) for (const sg of st.segs) for (const [L, W] of ors)
+        if (L <= sg.L + E && sg.usedW + W <= st.w + E){ const w = sg.L - L; if (!b1 || w < b1.w) b1 = {sg, st, L, W, w}; }
+      if (b1 && b1.w <= tol.seg * b1.sg.L){ placeSeg(b1.st, b1.sg, b1.L, b1.W, it.num); continue; }
+      for (const sh of sheets) for (const st of sh.strips) for (const [L, W] of ors)
+        if (W <= st.w + E && st.usedL + L <= SL + E){ const w = st.w - W; if (!b2 || w < b2.w) b2 = {st, L, W, w}; }
+      if (b2 && b2.w <= tol.strip * b2.W){ newSeg(b2.st, b2.L, b2.W, it.num); continue; }
+      for (const sh of sheets) for (const [L, W] of ors)
+        if (L <= SL + E && sh.usedW + W <= SW + E){ if (!b3 || W < b3.W) b3 = {sh, L, W}; }
+      if (b3){ newSeg(newStrip(b3.sh, b3.W), b3.L, b3.W, it.num); continue; }
+      if (b1){ placeSeg(b1.st, b1.sg, b1.L, b1.W, it.num); continue; }
+      if (b2){ newSeg(b2.st, b2.L, b2.W, it.num); continue; }
+      const o = ors.find(([L, W]) => L <= SL + E && W <= SW + E);
+      if (!o) continue;
+      const sh = {strips: [], usedW: 0}; sheets.push(sh);
+      newSeg(newStrip(sh, o[1]), o[0], o[1], it.num);
+    }
+    return sheets;
+  }
+  // Strategy 2: build complete strips first (filling each strip's length), then fit the strips onto sheets (1-D bin packing).
+  function pack2(items, job, tol, rnd, noise){
+    const SL = job.SL, SW = job.SW, k = job.kerf, E = 1e-6;
+    const rest = items.slice(), strips = [];
+    while (rest.length){
+      const first = rest.shift();
+      const fo = first.rot && Math.abs(first.L - first.W) > E && (first.flip ? first.L : first.W) < (first.flip ? first.W : first.L) ? [first.W, first.L] : [first.L, first.W];
+      let o0 = fo; if (o0[0] > SL + E || o0[1] > SW + E) o0 = [fo[1], fo[0]];
+      if (o0[0] > SL + E || o0[1] > SW + E) continue;
+      const st = {w: o0[1], usedL: 0, segs: []};
+      const seg0 = {x: 0, L: o0[0], usedW: 0, items: []}; st.segs.push(seg0); st.usedL = o0[0] + k;
+      seg0.items.push({x: 0, yo: 0, L: o0[0], W: o0[1], num: first.num}); seg0.usedW = o0[1] + k;
+      for (let i = 0; i < rest.length; i++){
+        const it = rest[i];
+        const ors = it.rot && Math.abs(it.L - it.W) > E ? [[it.L, it.W], [it.W, it.L]] : [[it.L, it.W]];
+        let placed = false;
+        for (const [L, W] of ors){
+          if (W > st.w + E) continue;
+          const sg = st.segs.find(g => L <= g.L + E && g.usedW + W <= st.w + E && (g.L - L) <= tol.seg * g.L);
+          if (sg){ sg.items.push({x: sg.x, yo: sg.usedW, L, W, num: it.num}); sg.usedW += W + k; placed = true; break; }
+          if (st.usedL + L <= SL + E && (st.w - W) <= tol.strip * W){
+            const g = {x: st.usedL, L, usedW: W + k, items: [{x: st.usedL, yo: 0, L, W, num: it.num}]}; st.segs.push(g); st.usedL += L + k; placed = true; break;
+          }
+        }
+        if (placed){ rest.splice(i, 1); i--; }
+      }
+      strips.push(st);
+    }
+    // fit strips onto sheets: best fit decreasing on strip width, with a little noise
+    strips.sort((a, b) => b.w * (1 + noise * (rnd() - .5)) - a.w * (1 + noise * (rnd() - .5)));
+    const sheets = [];
+    for (const st of strips){
+      let best = null;
+      for (const sh of sheets){ const free = SW - sh.usedW - st.w; if (free >= -E && (!best || free < best.free)) best = {sh, free}; }
+      const sh = best ? best.sh : (sheets.push({strips: [], usedW: 0}), sheets[sheets.length - 1]);
+      st.y = sh.usedW; sh.usedW += st.w + k; sh.strips.push(st);
+      for (const g of st.segs) for (const p of g.items){ p.y = st.y + p.yo; delete p.yo; }
+    }
+    return sheets;
+  }
+  function score(sheets, job){
+    const last = sheets[sheets.length - 1];
+    const used = last ? last.strips.reduce((a, st) => a + st.w * Math.min(job.SL, st.usedL), 0) : 0;
+    return sheets.length * 1e9 + used;
+  }
+  const KEYS = [it => [it.W, it.L], it => [it.L, it.W], it => [it.L * it.W, it.W], it => [Math.max(it.L, it.W), Math.min(it.L, it.W)], it => [it.L + it.W, it.W]];
+  const TOLS = [{seg: 1, strip: 0}, {seg: .3, strip: .25}, {seg: 1, strip: 1}, {seg: .5, strip: .1}];
+  function order(items, key, noise, rnd){
+    return items.map(it => { const kv = key(it); return {it, a: kv[0] * (1 + noise * (rnd() - .5)), b: kv[1]}; })
+      .sort((p, q) => q.a - p.a || q.b - p.b).map(x => x.it);
+  }
+  function optimize(job, budget, progress){
+    let seed = 987654321;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    let best = null, bestScore = Infinity, iters = 0;
+    const t0 = now(); let lastP = t0;
+    for (;;){
+      const det = iters < KEYS.length * TOLS.length * 2;
+      const di = iters >> 1;
+      const key = det ? KEYS[di % KEYS.length] : KEYS[Math.floor(rnd() * KEYS.length)];
+      const tol = det ? TOLS[Math.floor(di / KEYS.length) % TOLS.length] : {seg: rnd(), strip: rnd() * rnd()};
+      const items = job.items.map(it => ({...it, flip: !det && it.rot && rnd() < .5}));
+      const noise = det ? 0 : rnd() * .6, ordered = order(items, key, noise, rnd);
+      const sheets = (iters % 2) ? pack2(ordered, job, tol, rnd, noise) : pack(ordered, job, tol);
+      const sc = score(sheets, job);
+      if (sc < bestScore){ bestScore = sc; best = sheets; }
+      iters++;
+      const t = now();
+      if (t - lastP > 150){ progress((t - t0) / budget); lastP = t; }
+      if (!det && t - t0 > budget) break;
+    }
+    return {sheets: best || [], iters};
+  }
+  self.onmessage = e => {
+    const {jobs, budget} = e.data, out = {};
+    jobs.forEach((job, ji) => { out[job.mat] = optimize(job, budget / jobs.length, p => self.postMessage({type: 'progress', p: (ji + Math.min(1, p)) / jobs.length})); });
+    self.postMessage({type: 'done', out});
+  };
+}
+let opt = null, optWorker = null;
+try { opt = JSON.parse(localStorage.getItem(STORE + '-opt') || 'null'); } catch (e) { opt = null; }
+function sigFor(R, m){ const mi = R.nests[m].mat; return JSON.stringify([mi.L, mi.W, S.kerf, S.trim, (R.byMat[m] || []).map(g => [g.num, rnd(g.L), rnd(g.W), g.qty, g.rot ? 1 : 0])]); }
+function optFor(R, m){ return opt && opt.res && opt.res[m] && opt.sig && opt.sig[m] === sigFor(R, m) ? opt.res[m] : null; }
+function sheetsFor(R, m){ const o = optFor(R, m); return o ? o.sheets : R.nests[m].sheets; }
+function runOptimizer(){
+  const R = lastR; if (!R) return;
+  const mats = MAT_ORDER.filter(m => R.nests[m] && R.nests[m].sheets.length);
+  const st = $('#optStatus'), btn = $('#optBtn');
+  if (!mats.length){ st.textContent = 'Nothing to lay out yet.'; return; }
+  const jobs = mats.map(m => {
+    const mi = R.nests[m].mat, items = [];
+    for (const g of R.byMat[m]) for (let i = 0; i < g.qty; i++) items.push({num: g.num, L: g.L, W: g.W, rot: g.rot});
+    return {mat: m, SL: mi.L - 2*S.trim, SW: mi.W - 2*S.trim, kerf: S.kerf, items};
+  });
+  const sigs = Object.fromEntries(mats.map(m => [m, sigFor(R, m)]));
+  const budget = +$('#optEffort').value;
+  try {
+    if (optWorker) optWorker.terminate();
+    optWorker = new Worker(URL.createObjectURL(new Blob(['(' + workerMain.toString() + ')()'], {type: 'text/javascript'})));
+  } catch (e) { st.textContent = 'Your browser blocked the background optimizer, so the quick layouts are shown.'; return; }
+  btn.disabled = true; btn.textContent = 'Optimizing…'; st.textContent = 'Starting…';
+  const finish = msg => { btn.disabled = false; btn.textContent = 'Optimize sheet layouts'; st.textContent = msg; if (optWorker){ optWorker.terminate(); optWorker = null; } };
+  optWorker.onerror = () => finish('The optimizer stopped with an error. The quick layouts are still shown.');
+  optWorker.onmessage = e => {
+    const d = e.data;
+    if (d.type === 'progress'){ st.textContent = `Optimizing… ${Math.round(d.p * 100)}%`; return; }
+    const res = {}, notes = [];
+    let tries = 0;
+    for (const m of mats){
+      const o = d.out[m]; tries += o.iters;
+      const area = (R.nests[m].mat.L) * (R.nests[m].mat.W);
+      const sheets = o.sheets.map(sh => {
+        const strips = sh.strips.map(st => ({...st, parts: st.segs.flatMap(sg => sg.items)}));
+        const used = strips.reduce((a, st) => a + st.parts.reduce((b, p) => b + p.L * p.W, 0), 0);
+        return {strips, area: used, yield: used / area};
+      });
+      const quick = R.nests[m].sheets.length, prev = optFor(R, m), prevN = prev ? prev.sheets.length : Infinity;
+      const job = jobs.find(j => j.mat === m), floor = Math.ceil(job.items.reduce((a, it) => a + it.L * it.W, 0) / (job.SL * job.SW));
+      const label = `${matInfo(m).nominal} maple (no fewer than ${floor} possible by area)`;
+      if (sheets.length && sheets.length <= quick && sheets.length <= prevN){ res[m] = {sheets, iters: o.iters}; notes.push(`${label}: ${sheets.length} sheet${sheets.length === 1 ? '' : 's'}${sheets.length < quick ? ` (quick layout: ${quick})` : ' (same count, bigger leftovers)'}`); }
+      else if (prev){ res[m] = prev; notes.push(`${label}: kept the earlier ${prevN}-sheet result`); }
+      else notes.push(`${label}: the quick layout's ${quick} sheet${quick === 1 ? '' : 's'} is already the best found`);
+    }
+    opt = {sig: sigs, res};
+    try { localStorage.setItem(STORE + '-opt', JSON.stringify(opt)); } catch (err) {}
+    update();
+    finish(`Done, ${tries.toLocaleString()} layouts tried. ${notes.join(' · ')}.`);
+  };
+  optWorker.postMessage({jobs, budget});
+}
+
+function cutPlanHtml(s, mi, info){
+  const SL = mi.L - 2*S.trim, SW = mi.W - 2*S.trim, E = 1e-6;
+  const nm = n => esc((info.get(n) || {}).name || 'Part');
+  const tag = n => `<span class="tag">${n}</span>`;
+  const sz = (L, W) => `<span class="sz">${fmt(L)} × ${fmt(W)}</span>`;
+  let usedW = 0;
+  const html = s.strips.slice().sort((p, q) => p.y - q.y).map((st, si) => {
+    usedW = Math.max(usedW, st.y + st.w);
+    const segs = st.segs || st.parts.slice().sort((p, q) => p.x - q.x).map(p => ({x: p.x, L: p.L, items: [p]}));
+    const lines = [];
+    for (let i = 0; i < segs.length; i++){
+      const sg = segs[i];
+      if (sg.items.length === 1){
+        const p = sg.items[0];
+        let n = 1;
+        while (i + n < segs.length && segs[i + n].items.length === 1 && segs[i + n].items[0].num === p.num && Math.abs(segs[i + n].L - sg.L) < E && Math.abs(segs[i + n].items[0].W - p.W) < E) n++;
+        const how = (p.W < st.w - E ? `, rip to ${fmt(p.W)}″ wide` : '') + (p.L < sg.L - E ? `, trim to ${fmt(p.L)}″ long` : '');
+        lines.push(`<li><span class="act">${n > 1 ? `Crosscut ${n} pieces at ${fmt(sg.L)}″` : `Crosscut ${fmt(sg.L)}″`}${how}</span><span class="res">${tag(p.num)} <span class="pn">${nm(p.num)}${n > 1 ? ` ×${n}` : ''}</span> ${sz(p.L, p.W)}</span></li>`);
+        i += n - 1;
+      } else {
+        const groups = [];
+        for (const p of sg.items.slice().sort((p, q) => p.y - q.y)){
+          const g = groups.find(g => g.num === p.num && Math.abs(g.W - p.W) < E && Math.abs(g.L - p.L) < E);
+          if (g) g.n++; else groups.push({num: p.num, W: p.W, L: p.L, n: 1});
+        }
+        const sub = groups.map(g => `<li>${tag(g.num)} <span class="pn">${nm(g.num)}${g.n > 1 ? ` ×${g.n}` : ''}</span> <span class="how">${g.n > 1 ? `${g.n} at ` : ''}${fmt(g.W)}″ wide${g.L < sg.L - E ? `, trim to ${fmt(g.L)}″ long` : ''}</span> ${sz(g.L, g.W)}</li>`).join('');
+        lines.push(`<li><span class="act">Crosscut ${fmt(sg.L)}″, then rip that piece into ${sg.items.length}:</span><ul class="rips">${sub}</ul></li>`);
+      }
+    }
+    const used = st.usedL !== undefined ? st.usedL : st.used;
+    const rem = SL - used + S.kerf;
+    const off = rem > 2 ? `<div class="off">Leftover from this strip: ${fmt(rem, 8)} × ${fmt(st.w)}</div>` : '';
+    return `<div class="strip"><div class="strip-h"><span class="snum">${si + 1}</span>Rip a strip <b class="mono">${fmt(st.w)}″</b> wide</div><ol class="cuts">${lines.join('')}</ol>${off}</div>`;
+  }).join('');
+  const restW = SW - usedW;
+  return html + (restW > 2 ? `<div class="off">Leftover along the edge: ${fmt(SL, 8)} × ${fmt(restW, 8)}</div>` : '');
+}
+function renderSheets(R){
+  let out = '';
+  const info = new Map(R.groups.map(g => [g.num, g]));
+  for (const m of MAT_ORDER){
+    const N = R.nests[m]; if (!N) continue;
+    const O = optFor(R, m), list = O ? O.sheets : N.sheets, stale = !O && opt && opt.res && opt.res[m];
+    const mi = N.mat, total = list.length;
+    const avg = total ? list.reduce((a, s) => a + s.yield, 0) / total : 0;
+    const tag = O ? '<span class="tag">optimized</span>' : stale ? '<span class="note" style="color:var(--warn)">Changed since you optimized. Run it again.</span>' : '<span class="note">quick layout</span>';
+    out += `<div style="display:grid;gap:12px"><div class="matsum"><h3>${esc(mi.nominal)} ${esc(mi.name)}</h3>${tag}<span class="note mono">${total} sheet${total === 1 ? '' : 's'} · ${Math.round(avg*100)}% average yield · ${fmt(S.kerf)}″ kerf</span></div><div class="sheetgrid">`;
+    list.forEach((s, i) => {
+      const tr = S.trim;
+      let g = `<defs><pattern id="hatch-${m}-${i}" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="s-hatch" x1="0" y1="0" x2="0" y2="3"/></pattern></defs>`;
+      g += `<rect class="s-sheet" x="0" y="0" width="${mi.L}" height="${mi.W}"/><rect x="0" y="0" width="${mi.L}" height="${mi.W}" fill="url(#hatch-${m}-${i})"/>`;
+      const seq = [];
+      for (const st of s.strips){
+        const parts = [];
+        for (const p of st.parts){
+          const x = tr + p.x, y = tr + p.y;
+          g += `<rect class="s-part" x="${r2(x)}" y="${r2(y)}" width="${r2(p.L)}" height="${r2(p.W)}"/>`;
+          const fs = Math.min(5, p.W*.42, p.L*.3, (p.L - 1) / (String(p.num).length * .65));
+          const showDim = p.W >= 6 && p.L >= 14;
+          g += `<text class="s-num" x="${r2(x + p.L/2)}" y="${r2(y + p.W/2 - (showDim ? fs*.35 : 0))}" font-size="${r2(fs)}">${p.num}</text>`;
+          if (showDim){ const dtxt = `${fmt(p.L)} × ${fmt(p.W)}`; const ds = Math.min(2.4, p.W*.17, (p.L - 1.5) / (dtxt.length * .62)); g += `<text class="s-dim" x="${r2(x + p.L/2)}" y="${r2(y + p.W/2 + fs*.55)}" font-size="${r2(ds)}">${fmt(p.L)} × ${fmt(p.W)}</text>`; }
+          parts.push(`#${p.num} ${fmt(p.L)}${p.W < st.w - 1e-6 ? ` (rip to ${fmt(p.W)})` : ''}`);
+        }
+      }
+      out += `<div class="sheet"><div class="matsum"><b>Sheet ${i + 1} of ${total}</b><span class="note mono">${Math.round(s.yield*100)}% used</span></div>
+        <svg viewBox="-1 -1 ${mi.L + 2} ${mi.W + 2}" role="img" aria-label="Sheet ${i + 1} cutting layout">${g}</svg><div class="cutplan">${cutPlanHtml(s, mi, info)}</div></div>`;
+    });
+    out += '</div></div>';
+  }
+  $('#sheets').innerHTML = out || '<p class="muted" style="margin:0">Nothing to lay out yet.</p>';
+}
+
+/* ---------- rendering: hardware ---------- */
+function renderHardware(R){
+  const hw = R.hw;
+  const rows = [];
+  if (hw.hinges) rows.push([`Concealed 35 mm cup hinges, full overlay for frameless, soft-close, with mounting plates`, hw.hinges, `2 per door up to 40″ tall, 3 up to 60″, 4 up to 80″`]);
+  if (hw.angleHinges) rows.push([`+45° angled concealed hinges with plates, for the diagonal corner door`, hw.angleHinges, `The door meets the sides at 135°, so standard hinges will not work`]);
+  const blinds = R.cabs.filter(x => x.ok && x.corner && x.corner.type === 'blind' && !x.corner.upper);
+  if (blinds.length) rows.push([`Blind corner pull-out (optional)`, `${blinds.length}`, `Check the opening it needs against your door width (${blinds.map(x => `${x.id}: ${fmt(x.corner.dw)}″`).join(', ')}) before cutting`]);
+  Object.entries(hw.slides).sort((a,b) => +a[0] - +b[0]).forEach(([L, q]) => rows.push([`${fmt(+L)}″ drawer slides, full extension, side mount`, `${q} pair${q > 1 ? 's' : ''}`, `Boxes sized for ${fmt(S.slideClear)}″ clearance per side`]));
+  if (hw.pulls || hw.falsePulls) rows.push([`Black pulls`, hw.pulls + hw.falsePulls, hw.falsePulls ? `Includes ${hw.falsePulls} on false fronts; leave those off if you prefer` : `2 per drawer front wider than ${fmt(S.pullDoubleOver)}″`]);
+  if (hw.pins) rows.push([`Shelf pins, 5 mm`, hw.pins, `4 per adjustable shelf`]);
+  const band = bandInches(R);
+  if (band) rows.push([`Maple edge banding, 13/16″ or 7/8″ wide`, `${Math.ceil(band*1.1/12)} ft`, `${Math.round(band/12)} ft measured plus 10% for trimming`]);
+  const kick = R.cabs.filter(x => x.ok && LOWER.has(x.c.type)).reduce((a, x) => a + x.W, 0);
+  const tops = R.walls ? ['L','R'].flatMap(k => (R.walls[k].counterRuns || []).map(v => `${R.walls[k].name.replace(' wall', '')} ${fmt(v, 16)}″`)) : [];
+  if (tops.length) rows.push([`Countertop, ${fmt(S.counterT)}″ thick`, `${tops.length} piece${tops.length > 1 ? 's' : ''}`, `Lengths including ${fmt(S.counterOverhang)}″ overhang at exposed ends: ${tops.join(', ')}`]);
+  if (kick) rows.push([`Toe kick, ${fmt(S.platformH)}″ tall`, `${fmt(kick/12, 4)} ft`, S.kickStrips ? 'Cut from the 3/4″ maple: the strips are in the cut list and sheet layouts' : 'Front of the runs only; buy or cut separately']);
+  const cons = consumables(R);
+  for (const m of MATS_UI){ const v = cons[m.k]; if (v && v.n) rows.push([m.label, `${v.n}${m.suffix || ''}`, v.basis]); }
+  const pc = plyCost(R);
+  for (const r of pc.rows) rows.push([`${r.mi.nominal} ${r.mi.name}, ${fmt(r.mi.L)} × ${fmt(r.mi.W)} sheets`, r.n, `${r.layout} from the sheet layouts${r.spare ? ` + ${r.spare} spare` : ''}, at $${r.price} a sheet = $${(r.n*r.price).toLocaleString()}`]);
+  if (pc.rows.length) rows.push(['Plywood total (estimate)', `$${pc.total.toLocaleString()}`, 'Set prices in the Materials and cost boxes at the top of the page']);
+  $('#hardware').innerHTML = rows.length ? `<div class="scroll"><table class="hw"><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th>Basis</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${esc(r[0])}</td><td class="qty">${esc(r[1])}</td><td class="note">${esc(r[2])}</td></tr>`).join('') + '</tbody></table></div>' +
+    `<p class="note" style="margin:0">Pocket screws: 1 1/4″ coarse-thread for the 3/4″ plywood joints, 1″ for 1/2″ drawer stock. Wood glue on every joint.</p>`
+    : '<p class="muted" style="margin:0">Add cabinets to see hardware.</p>';
+}
+
+/* ---------- settings ---------- */
+const SETTINGS = [
+  {title:'Room', fields:[
+    ['leftLen','Left wall length (from the corner)','dim'],
+    ['rightLen','Right wall length (from the corner)','dim'],
+    ['stoveWall','Stove is on','select',null,[['L','Left wall'],['R','Right wall'],['none','No stove']]],
+    ['stoveFrom','Stove space starts this far from the corner','dim','Measured to the countertop edge. The cabinets beside the stove sit back by the countertop overhang.'],['stoveW','Stove space width, between countertop edges','dim','30″ for a standard 30″ range. Check your range’s installation manual.'],
+    ['winWall','Window is on','select',null,[['L','Left wall'],['R','Right wall'],['none','No window']]],
+    ['winFrom','Window starts this far from the corner','dim'],['winW','Window width','dim'],
+    ['cornerOwner','Corner cabinets belong to','select','The wall whose cabinets run into the corner; the other wall starts past them. A blind corner cabinet overrides this for the bases, and a diagonal corner upper for the uppers.',[['L','Left wall'],['R','Right wall']]],
+    ['gapAt','Leftover space goes','select','Install the fixed pieces first and build out from them; the spare inches end up at the corner.',[['corner','At the corner'],['fixed','Next to the fixed pieces']]]
+  ]},
+  {title:'Materials', fields:[
+    ['boxT','Maple plywood, actual thickness','dim','Measure with calipers. “3/4″” hardwood ply is usually 23/32″ or less, and every box width depends on it.'],
+    ['backT','Back plywood, actual thickness','dim'],
+    ['drwT','Drawer box stock thickness','dim'],
+    ['sheetBoxL','Maple sheet length (grain)','dim'],['sheetBoxW','Maple sheet width','dim'],
+    ['sheetBackL','Back ply sheet length','dim'],['sheetBackW','Back ply sheet width','dim'],
+    ['sheetDrwL','Drawer stock sheet length','dim'],['sheetDrwW','Drawer stock sheet width','dim'],
+    ['rotBack','Backs can ignore grain direction','bool'],
+    ['rotDrw','Drawer box parts can ignore grain','bool'],
+    ['rotBox','All 3/4″ maple parts can ignore grain','bool','Saves the most plywood, but doors, drawer fronts and sides may end up with grain running sideways. You can also choose part by part in the cut list.'],
+    ['spareBox','Spare 3/4″ sheets to buy','num','For mistakes and grain matching.'],
+    ['kerf','Saw kerf','dim'],['trim','Trim from each sheet edge','dim','Use 1/4″ if your factory edges are damaged.']
+  ]},
+  {title:'Heights', fields:[
+    ['counterH','Finished countertop height','dim'],['counterT','Countertop thickness','dim'],
+    ['counterOverhang','Countertop overhang at exposed ends','dim','Not added at the corner wall or against a full-height gable or tall cabinet. Beside the stove, the cabinets sit back so the countertop edges land on the stove space.'],
+    ['platformH','Platform height, including shims','dim','2×4 on edge is 3 1/2″.'],
+    ['kickStrips','Cut toe kick strips from the 3/4″ maple','bool','Strips as tall as the platform, one per run of cabinets. Runs longer than a sheet are split into equal pieces.'],
+    ['kickSetback','Platform setback from box front','dim','Sets the toe kick depth.'],
+    ['upperTop','Top of upper cabinets from floor','dim'],['upperH','Upper cabinet box height','dim']
+  ], computed:true},
+  {title:'Depths (box, including back)', fields:[['baseD','Base cabinets','dim'],['upperD','Upper cabinets','dim'],['tallD','Tall cabinets','dim']]},
+  {title:'Box parts', fields:[
+    ['stretcherW','Front stretcher width','dim'],['nailerW','Rear nailer width','dim'],
+    ['baseLowerNailer','Base cabinets get a lower rear nailer too','bool'],
+    ['tallFixedShelf','Tall cabinets get a fixed middle shelf','bool']
+  ]},
+  {title:'Doors and drawer fronts', fields:[
+    ['edgeReveal','Reveal at each cabinet edge','dim','1/16″ each side gives 1/8″ between neighboring cabinets.'],
+    ['frontGap','Gap between fronts','dim'],['counterGap','Gap under the countertop (bases)','dim'],
+    ['vReveal','Total vertical reveal, uppers and talls','dim'],
+    ['pairOver','Use a pair of doors when wider than','dim'],
+    ['drawerGrain','Drawer front grain','select',null,[['horizontal','Horizontal'],['vertical','Vertical, like the doors']]]
+  ]},
+  {title:'Shelves', fields:[['shelfSetback','Set back from box front','dim'],['shelfClear','Total side clearance','dim']]},
+  {title:'Drawer boxes', fields:[
+    ['slideClear','Slide clearance per side','dim','1/2″ for most side-mount slides. Undermount slides need different numbers.'],
+    ['drwDeduct','Box height = front height minus','dim'],
+    ['slideLens','Slide lengths available','text'],
+    ['grooveD','Bottom groove depth','dim','Set to 0 to nail the bottom on underneath.'],
+    ['btmClear','Bottom clearance in groove','dim']
+  ]},
+  {title:'Hardware and output', fields:[
+    ['pullLen','Pull length (for the drawing)','dim'],
+    ['pullDoubleOver','Two pulls on drawer fronts wider than','dim'],
+    ['round','Round cut sizes to nearest','select',null,[['16','1/16″'],['32','1/32″']]]
+  ]}
+];
+function renderSettings(){
+  let h = '';
+  for (const g of SETTINGS){
+    h += `<fieldset><legend>${esc(g.title)}</legend>`;
+    for (const [k, label, type, help, opts] of g.fields){
+      const id = 's-' + k;
+      let ctl;
+      if (type === 'bool') ctl = `<input type="checkbox" id="${id}" data-k="${k}"${S[k] ? ' checked' : ''}>`;
+      else if (type === 'select') ctl = `<select class="sel" id="${id}" data-k="${k}">${opts.map(([v, l]) => `<option value="${v}"${String(S[k]) === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+      else if (type === 'num') ctl = `<input class="in" id="${id}" data-k="${k}" data-type="num" value="${esc(S[k])}" inputmode="decimal" autocomplete="off">`;
+      else if (type === 'text') ctl = `<input class="in wide" id="${id}" data-k="${k}" data-type="text" value="${esc(S[k])}" autocomplete="off">`;
+      else ctl = `<input class="in" id="${id}" data-k="${k}" data-type="dim" value="${esc(fmt(S[k], 64))}" inputmode="decimal" autocomplete="off">`;
+      h += `<div class="field"><label for="${id}">${esc(label)}</label>${ctl}${help ? `<small>${esc(help)}</small>` : ''}</div>`;
+    }
+    if (g.computed) h += `<div class="computed"><span>Base box height</span><b id="cmpBase"></b></div><div class="computed"><span>Tall box height</span><b id="cmpTall"></b></div>`;
+    h += '</fieldset>';
+  }
+  $('#settings').innerHTML = h;
+}
+function renderRules(){
+  $('#rulesText').innerHTML = `<h3>How the parts are calculated</h3>
+  <ul>
+    <li><b>Boxes.</b> Sides run full height. Bottoms (and tops on uppers and talls) fit between the sides, so their width is box width minus two plywood thicknesses. Pocket holes go in the bottoms, stretchers and nailers and drive into the sides, with glue on every joint.</li>
+    <li><b>Base tops are open.</b> Each base gets a flat front stretcher and an on-edge rear nailer at the top, plus a lower rear nailer. The sink base is built the same way; notch or trim it for plumbing as needed. Rear nailers sit inside against the back; screw through them into the studs.</li>
+    <li><b>Backs.</b> 1/4″ plywood glued and nailed onto the back of the box, flush with the outside. Side depth is box depth minus back thickness.</li>
+    <li><b>Platform base.</b> Boxes have no toe kick. Base box height is countertop height minus countertop thickness minus platform height (<span class="mono" id="ruleBase"></span> right now). Build the 2×4 platform level, set back from the box fronts by the toe kick setback, set the boxes on it, then fasten the toe kick to the platform.</li>
+    <li><b>Fronts.</b> Full overlay, cut from the same maple plywood and edge banded on all four edges. Doors and drawer fronts are inset from the box edges by the edge reveal, with a gap between fronts. Base fronts stop below the box top by the countertop gap.</li>
+    <li><b>Drawer boxes.</b> Sized for side-mount slides: box width is the inside width minus the slide clearance on each side, and depth is the longest slide in your list that fits. Box height is the front height minus the deduction. Check these against the slides you buy before cutting.</li>
+    <li><b>Walls.</b> Cabinets on each wall run out from the corner in list order. Bases jump over the stove and uppers jump over the window. Cabinets pack tight against the next fixed piece, stove or window, so any spare room ends up at the corner as installation wiggle room (you can switch this under Room). Gaps anywhere else are flagged. Without corner cabinets, the wall chosen under Room → Corner cabinets belong to starts at the corner. The wall that holds a blind corner starts at the corner; the other wall's bases start past the blind corner and filler. With a diagonal corner upper, uppers on both walls start where it ends.</li>
+    <li><b>Snapping.</b> Between any two fixed things (the corner, a fixed piece, the stove, the window, a tall cabinet or the end of the wall) there is one leftover gap. Snap left or Snap right, as you face that wall, pulls a cabinet tight to whatever is on that side and puts the gap on its other side. Cabinets left on automatic pack against the next fixed piece, stove or window, so the spare room goes to the corner; past the last fixed thing they pack toward the corner and leave the open wall at the end.</li>
+    <li><b>Upper gables.</b> An upper can get a gable on each end. The box keeps the width you enter and the gables are added outside it, so a 30″ cabinet over the stove stays 30″ inside the gables and stays centered. Gables default to the standard upper height and the upper depth plus the door thickness, so they sit flush with the doors.</li>
+    <li><b>Fixed pieces.</b> A cabinet, appliance or end panel can be fixed: centered on the window, centered on the stove, a set distance from the corner, right after the fixed piece above it in the list, or (for uppers) lined up with a base cabinet below: left edges, right edges or centered, as you face the wall. Fixed pieces stay put; the cabinets around them flow in list order and any gap or overlap is flagged. The stove itself is set under Room.</li>
+    <li><b>End panels.</b> A custom part set to a wall takes up its thickness in that wall's run, so a dishwasher end panel counts toward the wall length. The default end panel is box depth plus front thickness deep, so it sits flush with the doors, and runs from the floor to the underside of the countertop.</li>
+    <li><b>Blind corner base.</b> It snaps like any other cabinet, so spare room can sit at the corner, hidden behind the other wall's cabinets. A blind panel covers the part hidden behind the other wall's cabinets. The first cabinet on the other wall starts the base depth plus front thickness plus the filler away from this cabinet's wall, and a filler strip closes the gap so pulls and drawers clear.</li>
+    <li><b>Blind corner upper.</b> Works like the blind corner base, at upper depth: the other wall's uppers start the upper depth plus front thickness plus the filler away from its wall. It snaps like any other upper. Use it or a diagonal corner upper, not both.</li>
+    <li><b>Diagonal corner upper.</b> Its sides are as deep as the neighboring uppers, with the front edges beveled 45°. The top, bottom and shelves are squares with one corner cut off, and the door hangs on +45° hinges.</li>
+    <li><b>Pocket holes that show.</b> Base bottoms can take pockets on the underside, hidden by the platform. Upper bottoms are seen from below, so drill those from the inside face or plan to plug them.</li>
+  </ul>`;
+}
+
+/* ---------- main loop ---------- */
+let timer = 0;
+function schedule(){ clearTimeout(timer); timer = setTimeout(update, 90); }
+function update(){
+  const R = fullCompute(); lastR = R;
+  renderStats(R); renderElevation(R); renderCorner(R); renderFilter(R); renderCutList(R); renderSheets(R); renderHardware(R);
+  const b = $('#cmpBase'), t = $('#cmpTall'), rb = $('#ruleBase');
+  if (b) b.textContent = fmt(baseBoxH()) + '″';
+  if (t) t.textContent = fmt(S.upperTop - S.platformH) + '″';
+  if (rb) rb.textContent = `${fmt(S.counterH)} − ${fmt(S.counterT)} − ${fmt(S.platformH)} = ${fmt(baseBoxH())}″`;
+  fillWhere(R);
+  $('#exampleBanner').hidden = !isExample;
+  save();
+}
+function save(){ try { localStorage.setItem(STORE, JSON.stringify({v:4, settings:S, cabinets:cabs.map(({uid, ...r}) => r), isExample})); } catch (e) {} }
+function loadData(d){
+  if (!d || typeof d !== 'object' || !Array.isArray(d.cabinets)) throw new Error('That text is not a saved cabinet project.');
+  const s = {...DEF};
+  if (d.settings && typeof d.settings === 'object') for (const k of Object.keys(DEF)) if (k in d.settings && typeof d.settings[k] === typeof DEF[k]) s[k] = d.settings[k];
+  const list = d.cabinets.filter(c => c && TYPES[c.type]).map(c => {
+    const n = newCab(c.type);
+    for (const k of Object.keys(n)) if (k !== 'uid' && k in c) n[k] = typeof n[k] === 'boolean' ? !!c[k] : String(c[k]);
+    return n;
+  });
+  if ((d.v || 1) < 2 && s.baseD === 24) s.baseD = DEF.baseD;
+  if ((d.v || 1) < 3 && s.sheetDrwL === 60 && s.sheetDrwW === 60){ s.sheetDrwL = DEF.sheetDrwL; s.sheetDrwW = DEF.sheetDrwW; }
+  if ((d.v || 1) < 4 && s.priceMisc === 150) s.priceMisc = DEF.priceMisc;
+  S = s; cabs = list; isExample = !!d.isExample;
+}
+
+/* ---------- events ---------- */
+const findCab = u => cabs.find(c => c.uid === u);
+$('#editor').addEventListener('input', e => {
+  const el = e.target, u = +el.dataset.u, f = el.dataset.f;
+  if (!u || !f) return;
+  const c = findCab(u); if (!c) return;
+  c[f] = el.type === 'checkbox' ? el.checked : el.value;
+  if (el.classList.contains('dim')){
+    const bad = el.value.trim() !== '' && !okDim(parseDim(el.value));
+    if (bad) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+  }
+  if (el.tagName === 'SELECT' || el.type === 'checkbox' || f === 'h') {
+    if (f === 'type'){ c.h = ''; c.d = ''; c.shelves = ''; if (c.type === 'panel'){ if (!c.name) c.name = 'Finished end panel'; c.w = '24 23/32'; c.h = '34 1/2'; } }
+    if (el.tagName === 'SELECT' || el.type === 'checkbox') renderEditor();
+  }
+  schedule();
+});
+$('#editor').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const u = +b.dataset.u, i = cabs.findIndex(c => c.uid === u); if (i < 0) return;
+  const act = b.dataset.act;
+  if (act === 'up' || act === 'down'){
+    const shown = cabs.map((c, j) => vis(c) ? j : -1).filter(j => j >= 0), k = shown.indexOf(i);
+    const j = act === 'up' ? shown[k - 1] : shown[k + 1];
+    if (j !== undefined) [cabs[i], cabs[j]] = [cabs[j], cabs[i]];
+  }
+  if (act === 'dup') cabs.splice(i + 1, 0, {...cabs[i], uid: uidN++, key: newKey()});
+  if (act === 'del') cabs.splice(i, 1);
+  renderEditor(); schedule();
+  if (act === 'up' || act === 'down'){ const nb = $(`button[data-act="${act}"][data-u="${u}"]`); if (nb && !nb.disabled) nb.focus(); }
+});
+document.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+  const gable = b.dataset.add === 'gable';
+  const c = gable ? newCab('panel', {name:'Fridge gable', w:'25', h:fmt(S.upperTop), band:'1L'}) : newCab(b.dataset.add);
+  const prev = [...cabs].reverse().find(x => (x.wall === 'L' || x.wall === 'R') && UPPER.has(x.type) === UPPER.has(c.type));
+  if (prev && (c.type !== 'panel' || gable)) c.wall = prev.wall;
+  if (gable && !prev) c.wall = 'L';
+  const lastLower = cabs.map(x => LOWER.has(x.type) || x.type === 'gap' || (x.type === 'panel' && !!x.wall)).lastIndexOf(true);
+  if (viewWall === 'L' || viewWall === 'R') c.wall = viewWall;
+  else if (viewWall === '') c.wall = '';
+  const lastShown = cabs.map(vis).lastIndexOf(true);
+  if (viewWall !== 'all' && lastShown >= 0) cabs.splice(lastShown + 1, 0, c);
+  else if ((LOWER.has(c.type) || c.type === 'gap' || gable) && lastLower >= 0) cabs.splice(lastLower + 1, 0, c); else cabs.push(c);
+  renderEditor(); schedule();
+  const el = document.getElementById(`c${c.uid}-w`); if (el) el.focus();
+}));
+document.querySelectorAll('#segWall button').forEach(b => b.addEventListener('click', () => { viewWall = b.dataset.vw; renderView(); renderEditor(); if (lastR) fillWhere(lastR); }));
+document.querySelectorAll('#segRow button').forEach(b => b.addEventListener('click', () => { viewRow = b.dataset.vr; renderView(); renderEditor(); if (lastR) fillWhere(lastR); }));
+function fillWhere(R){
+  const pos = new Map();
+  for (const k of ['L','R']) for (const it of R.walls[k].items) pos.set(it.x.c.uid, `${fmt(it.a, 16)} – ${fmt(it.b, 16)}`);
+  const d = R.cabs.find(x => x.c.type === 'upper-diag');
+  if (d && d.ok) pos.set(d.c.uid, `0 – ${fmt(d.W, 16)}`);
+  document.querySelectorAll('[data-where]').forEach(td => { td.textContent = pos.get(+td.dataset.where) || '—'; });
+  const note = $('#viewNote');
+  if (viewWall === 'L' || viewWall === 'R'){
+    const w = R.walls[viewWall], parts = [];
+    if (viewRow !== 'upper') parts.push(`bases end at ${fmt(w.lowEnd)}″ (${w.len - w.lowEnd >= 0 ? fmt(w.len - w.lowEnd) + '″ left' : fmt(w.lowEnd - w.len) + '″ over'})`);
+    if (viewRow !== 'base') parts.push(`uppers end at ${fmt(w.upEnd)}″ (${w.len - w.upEnd >= 0 ? fmt(w.len - w.upEnd) + '″ left' : fmt(w.upEnd - w.len) + '″ over'})`);
+    note.textContent = `${fmt(w.len)}″ wall · listed from the corner out · ${parts.join(' · ')}`;
+  } else note.textContent = viewWall === '' ? 'Pieces that are only in the cut list' : 'Every cabinet, in list order';
+}
+$('#settings').addEventListener('input', e => {
+  const el = e.target, k = el.dataset.k; if (!k) return;
+  if (el.type === 'checkbox') S[k] = el.checked;
+  else if (el.tagName === 'SELECT') S[k] = typeof DEF[k] === 'number' ? +el.value : el.value;
+  else if (el.dataset.type === 'text') S[k] = el.value;
+  else if (el.dataset.type === 'num'){ const v = parseFloat(el.value); if (isFinite(v) && v >= 0){ S[k] = v; el.removeAttribute('aria-invalid'); } else el.setAttribute('aria-invalid', 'true'); }
+  else {
+    const v = parseDim(el.value);
+    const okv = typeof v === 'number' && isFinite(v) && (v > 0 || (v === 0 && ['trim','grooveD','btmClear','counterGap','kickSetback','shelfClear','shelfSetback','counterOverhang'].includes(k)));
+    if (okv){ S[k] = v; el.removeAttribute('aria-invalid'); } else el.setAttribute('aria-invalid', 'true');
+  }
+  if (k === 'spareBox') buildMats();
+  renderEditor(); schedule();
+});
+$('#resetSettings').addEventListener('click', () => { S = {...DEF}; renderSettings(); buildMats(); renderEditor(); schedule(); toast('Construction rules reset'); });
+try { if (localStorage.getItem(STORE + '-mats') === 'closed') $('#matsBox').open = false; } catch (e) {}
+$('#matsBox').addEventListener('toggle', () => { try { localStorage.setItem(STORE + '-mats', $('#matsBox').open ? 'open' : 'closed'); } catch (e) {} });
+$('#mats').addEventListener('input', e => {
+  const el = e.target, pk = el.dataset.pk; if (!pk) return;
+  const v = parseFloat(String(el.value).replace(/[$,\s]/g, ''));
+  if (isFinite(v) && v >= 0){ S[pk] = v; el.removeAttribute('aria-invalid'); schedule(); } else el.setAttribute('aria-invalid', 'true');
+});
+$('#stats').addEventListener('click', e => {
+  if (!e.target.closest('#statProblems')) return;
+  selectTab('tab-cut');
+  const w = $('#warns'); w.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+});
+$('#optBtn').addEventListener('click', runOptimizer);
+$('#cutlist').addEventListener('change', e => {
+  const el = e.target; if (!el.dataset.gk) return;
+  S.grainFree = {...(S.grainFree || {})};
+  if (el.checked) S.grainFree[el.dataset.gk] = true; else delete S.grainFree[el.dataset.gk];
+  update();
+});
+$('#cutlist').addEventListener('click', e => {
+  const b = e.target.closest('button[data-grain]'); if (!b || !lastR) return;
+  if (b.dataset.grain === 'hidden'){
+    S.grainFree = {...(S.grainFree || {})};
+    for (const g of lastR.groups) if (HIDDEN_PARTS.includes(g.name) && !g.baseRot) S.grainFree[g.gk] = true;
+    toast('Grain ignored on hidden parts');
+  } else {
+    S.grainFree = {}; S.rotBox = false; S.rotBack = false; S.rotDrw = false; renderSettings();
+    toast('Grain respected on every part');
+  }
+  update();
+});
+$('#cabFilter').addEventListener('change', e => { filterCab = e.target.value; if (lastR) renderCutList(lastR); });
+
+let clearArmed = 0;
+$('#clearBtn').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!clearArmed){ b.textContent = 'Click again to clear'; b.classList.add('danger'); clearArmed = setTimeout(() => { clearArmed = 0; b.textContent = 'Clear all cabinets'; b.classList.remove('danger'); }, 4000); return; }
+  clearTimeout(clearArmed); clearArmed = 0; b.textContent = 'Clear all cabinets'; b.classList.remove('danger');
+  cabs = []; isExample = false; renderEditor(); update(); toast('Cabinet list cleared');
+});
+$('#dismissBtn').addEventListener('click', () => { isExample = false; update(); });
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => selectTab(t.id)));
+$('.tabs').addEventListener('keydown', e => {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const tabs = [...document.querySelectorAll('.tab')], i = tabs.indexOf(document.activeElement);
+  if (i < 0) return;
+  const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+  n.focus(); selectTab(n.id);
+});
+function selectTab(id){
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.id === id;
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    t.tabIndex = on ? 0 : -1;
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  try { localStorage.setItem(STORE + '-tab', id); } catch (e) {}
+}
+
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); }
+async function copyText(text, label){
+  try { await navigator.clipboard.writeText(text); toast(`${label} copied`); }
+  catch (e) { openDlg(label, 'Your browser blocked the clipboard. The text is selected below; press Ctrl+C or ⌘C to copy it.', text, false); const ta = $('#dlgText'); ta.focus(); ta.select(); }
+}
+function cutListTSV(){
+  const R = lastR || fullCompute();
+  const rows = [['Material','#','Part','Qty','Length (grain)','Width','Length in','Width in','Edge banding','Cabinets','Notes']];
+  for (const g of R.groups){
+    const b = g.band, bt = b.x ? 'angled edge' : !b.l && !b.w ? '' : (b.l === 2 && b.w === 2 ? 'all 4' : [b.l ? b.l + ' long' : '', b.w ? b.w + ' short' : ''].filter(Boolean).join(' + '));
+    rows.push([`${matInfo(g.mat).nominal} ${matInfo(g.mat).name}`, g.num, g.name, g.qty, fmt(g.L), fmt(g.W), rnd(g.L).toFixed(4), rnd(g.W).toFixed(4), bt, cabsText(g), [...g.notes].join('; ')]);
+  }
+  return rows.map(r => r.map(v => String(v).replace(/[\t\n]/g, ' ')).join('\t')).join('\n');
+}
+$('#copyCut').addEventListener('click', () => copyText(cutListTSV(), 'Cut list'));
+function projectJSON(){ return JSON.stringify({v:4, settings:S, cabinets:cabs.map(({uid, ...r}) => r), isExample}, null, 1); }
+$('#saveBtn').addEventListener('click', () => openDlg('Save project', 'Copy this text and keep it somewhere safe, or paste it to Claude. Load project brings it back.', projectJSON(), false));
+$('#loadBtn').addEventListener('click', () => openDlg('Load project', 'Paste a saved project here, then load it. This replaces the current cabinets and rules.', '', true));
+function openDlg(title, note, text, loadMode){
+  $('#dlgTitle').textContent = title; $('#dlgNote').textContent = note;
+  const ta = $('#dlgText'); ta.value = text; ta.readOnly = !loadMode;
+  $('#dlgLoad').hidden = !loadMode; $('#dlgCopy').hidden = loadMode; $('#dlgErr').hidden = true;
+  const d = $('#dlg'); if (!d.open) d.showModal();
+}
+$('#dlgClose').addEventListener('click', () => $('#dlg').close());
+$('#dlgCopy').addEventListener('click', () => {
+  const ta = $('#dlgText');
+  navigator.clipboard.writeText(ta.value).then(() => toast('Copied'), () => { ta.focus(); ta.select(); });
+});
+$('#dlgLoad').addEventListener('click', () => {
+  try { loadData(JSON.parse($('#dlgText').value)); renderSettings(); buildMats(); renderEditor(); update(); $('#dlg').close(); toast('Project loaded'); }
+  catch (e) { const er = $('#dlgErr'); er.textContent = e instanceof SyntaxError ? 'That text is not valid project data. Paste the whole saved project, including the outer braces.' : e.message; er.hidden = false; }
+});
+
+/* ---------- boot ---------- */
+let stored = null;
+try { stored = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { stored = null; }
+try { if (stored){ loadData(stored); if (isExample) cabs = example(); } else cabs = example(); } catch (e) { cabs = example(); isExample = true; }
+if (!cabs.length && isExample) cabs = example();
+renderRules(); renderSettings(); buildMats(); renderView(); renderEditor(); update();
+let tab = 'tab-cut';
+try { tab = localStorage.getItem(STORE + '-tab') || 'tab-cut'; } catch (e) {}
+selectTab(document.getElementById(tab) ? tab : 'tab-cut');
+})();
+</script>
