@@ -26,6 +26,9 @@ export interface RunGeometry {
   wallIds: string[];
   /** The start face corner (position 0). */
   origin: Point;
+  /** The wall centerline ends of the face at its start and end (where neighboring walls join). */
+  startJoint: Point;
+  endJoint: Point;
   /** Unit direction of increasing position. */
   u: Point;
   /** Unit normal from the face into the room. */
@@ -108,6 +111,12 @@ export function runGeometry(plan: Pick<Plan, 'walls' | 'openings'>, run: Cabinet
     if (p > JOIN_TOLERANCE && p < length) length = p;
   }
   const origin = add(add(O, scale(u0, sStart)), scale(n, anchor.wall.thickness / 2));
+  // Centerline ends of the chain: the first wall's end toward -u0 and the last wall's end toward +u0.
+  const ends = (w: Wall) => (along(w.a, O, u0) < along(w.b, O, u0) ? [w.a, w.b] : [w.b, w.a]);
+  const low = ends(chain[0]!)[0]!;
+  const high = ends(chain[chain.length - 1]!)[1]!;
+  const startJoint = fromA ? low : high;
+  const endJoint = fromA ? high : low;
   const rightward = dot(u, { x: -n.y, y: n.x }) > 0;
 
   const ids = new Set(chain.map((w) => w.id));
@@ -121,7 +130,7 @@ export function runGeometry(plan: Pick<Plan, 'walls' | 'openings'>, run: Cabinet
     })
     .sort((p, q) => p.a - q.a);
 
-  return { ok: true, run, wallIds: chain.map((w) => w.id), origin, u, n, rightward, length, openings };
+  return { ok: true, run, wallIds: chain.map((w) => w.id), origin, startJoint: { ...startJoint }, endJoint: { ...endJoint }, u, n, rightward, length, openings };
 }
 
 /** A point on the run: `t` along it and `d` out from the face into the room. */

@@ -101,27 +101,39 @@ export function itemLabels(items: readonly Pick<CabinetItem, 'id' | 'input'>[]):
 }
 
 /**
- * Drops runs whose walls are all gone, with their items and corners, and the diagonal uppers in
- * those corners. Items that lined up with a dropped item go back to list order. Returns what was
- * dropped so the editor can say so (and undo it).
+ * Removes runs, with their items and corners and the diagonal uppers in those corners. Items that
+ * lined up with a removed item go back to list order.
  */
+export function removeRuns(data: CabinetsData, runIds: ReadonlySet<string>): { data: CabinetsData; removed: { runs: CabinetRun[]; corners: CabinetCorner[]; items: CabinetItem[] } } {
+  const deadRuns = data.runs.filter((r) => runIds.has(r.id));
+  if (!deadRuns.length) return { data, removed: { runs: [], corners: [], items: [] } };
+  const deadCorners = data.corners.filter((c) => c.runIds.some((id) => runIds.has(id)));
+  const deadCornerIds = new Set(deadCorners.map((c) => c.id));
+  const deadItems = data.items.filter((it) => (it.runId !== undefined && runIds.has(it.runId)) || (it.cornerId !== undefined && deadCornerIds.has(it.cornerId)));
+  const deadItemIds = new Set(deadItems.map((it) => it.id));
+  return {
+    data: {
+      ...data,
+      runs: data.runs.filter((r) => !runIds.has(r.id)),
+      corners: data.corners.filter((c) => !deadCornerIds.has(c.id)),
+      items: withoutItems(data.items, deadItemIds),
+    },
+    removed: { runs: deadRuns, corners: deadCorners, items: deadItems },
+  };
+}
+
+/** The items without the given ones; line-ups with a removed item go back to list order. */
+export function withoutItems(items: readonly CabinetItem[], ids: ReadonlySet<string>): CabinetItem[] {
+  return items
+    .filter((it) => !ids.has(it.id))
+    .map((it) => (it.position.mode === 'align' && ids.has(it.position.itemId) ? { ...it, position: { mode: 'flow' as const } } : it));
+}
+
+/** Drops runs whose walls are all gone (see `removeRuns`). Returns what was dropped so the editor can say so. */
 export function pruneCabinets(
   plan: { walls: readonly { id: string }[] },
   data: CabinetsData,
 ): { data: CabinetsData; removed: { runs: CabinetRun[]; corners: CabinetCorner[]; items: CabinetItem[] } } {
   const wallIds = new Set(plan.walls.map((w) => w.id));
-  const deadRuns = data.runs.filter((r) => !r.wallIds.some((id) => wallIds.has(id)));
-  if (!deadRuns.length) return { data, removed: { runs: [], corners: [], items: [] } };
-  const deadRunIds = new Set(deadRuns.map((r) => r.id));
-  const deadCorners = data.corners.filter((c) => c.runIds.some((id) => deadRunIds.has(id)));
-  const deadCornerIds = new Set(deadCorners.map((c) => c.id));
-  const deadItems = data.items.filter((it) => (it.runId !== undefined && deadRunIds.has(it.runId)) || (it.cornerId !== undefined && deadCornerIds.has(it.cornerId)));
-  const deadItemIds = new Set(deadItems.map((it) => it.id));
-  const items = data.items
-    .filter((it) => !deadItemIds.has(it.id))
-    .map((it) => (it.position.mode === 'align' && deadItemIds.has(it.position.itemId) ? { ...it, position: { mode: 'flow' as const } } : it));
-  return {
-    data: { ...data, runs: data.runs.filter((r) => !deadRunIds.has(r.id)), corners: data.corners.filter((c) => !deadCornerIds.has(c.id)), items },
-    removed: { runs: deadRuns, corners: deadCorners, items: deadItems },
-  };
+  return removeRuns(data, new Set(data.runs.filter((r) => !r.wallIds.some((id) => wallIds.has(id))).map((r) => r.id)));
 }

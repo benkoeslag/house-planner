@@ -4,6 +4,7 @@ import { detectRooms, toSquareFeet } from '../model/rooms';
 import type { Opening, Plan, Point } from '../model/types';
 import { formatFeetInches } from '../model/units';
 import type { WallGeometry } from '../model/walls';
+import type { CabinetOverlay } from './cabinet-overlay';
 import type { Snap } from './snap';
 
 export interface View {
@@ -14,7 +15,13 @@ export interface View {
   s: number;
 }
 
-export type Selection = { kind: 'wall'; id: string } | { kind: 'opening'; id: string } | { kind: 'room'; at: Point } | null;
+export type Selection =
+  | { kind: 'wall'; id: string }
+  | { kind: 'opening'; id: string }
+  | { kind: 'room'; at: Point }
+  /** A cabinet run, showing its base or upper row, with one cabinet's details open. */
+  | { kind: 'run'; runId: string; row: 'base' | 'upper'; open?: string }
+  | null;
 
 export interface DrawState {
   plan: Plan;
@@ -29,6 +36,10 @@ export interface DrawState {
   hoverWall?: string;
   draft?: { start: Point; end: Point | null; thickness: number };
   snap?: Snap;
+  /** Cabinet footprints and run faces. */
+  cabinets?: CabinetOverlay;
+  /** Show every run's face line (the Cabinets tool). */
+  showRuns?: boolean;
 }
 
 export function toScreen(v: View, w: number, h: number, p: Point): Point {
@@ -86,6 +97,31 @@ export function drawPlan(st: DrawState): string {
   for (const o of plan.openings) {
     const g = geometry.get(o.wallId);
     if (g) out.push(drawOpening(o, g, S, st.selection?.kind === 'opening' && st.selection.id === o.id, problems.has(o.id)));
+  }
+
+  // Cabinets: floor cabinets filled, uppers dashed on top, then labels.
+  if (st.cabinets) {
+    const sel = st.selection?.kind === 'run' ? st.selection : null;
+    for (const f of st.cabinets.faces) {
+      if (!st.showRuns && f.runId !== sel?.runId) continue;
+      const a = S(f.from);
+      const b = S(f.to);
+      out.push(`<line class="run-face${f.runId === sel?.runId ? ' selected' : ''}" x1="${r1(a.x)}" y1="${r1(a.y)}" x2="${r1(b.x)}" y2="${r1(b.y)}"/>`);
+    }
+    const upper = (k: string) => k === 'upper' || k === 'corner';
+    const ordered = [...st.cabinets.shapes.filter((x) => !upper(x.kind)), ...st.cabinets.shapes.filter((x) => upper(x.kind))];
+    for (const sh of ordered) {
+      const open = sel?.open === sh.itemId;
+      out.push(`<polygon class="cab ${sh.kind}${sh.runId === sel?.runId ? ' in-run' : ''}${open ? ' open' : ''}${sh.bad ? ' bad' : ''}" points="${pts(sh.points)}"/>`);
+    }
+    for (const sh of ordered) {
+      const q = sh.points.map(S);
+      const xs = q.map((p) => p.x);
+      const ys = q.map((p) => p.y);
+      if (Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) < 14) continue;
+      const c = S(sh.labelAt);
+      out.push(`<text class="cab-label${upper(sh.kind) ? ' upper' : ''}" x="${r1(c.x)}" y="${r1(c.y)}" dy="0.35em">${esc(sh.label)}</text>`);
+    }
   }
 
   // Wall face lengths, on each side of every wall.

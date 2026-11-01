@@ -6,6 +6,11 @@ import type { OpeningKind, Plan, Point, ProjectSettings } from '../model/types';
 import { formatFeetInches, formatFraction, parseLength } from '../model/units';
 import { wallGeometry, type WallGeometry } from '../model/walls';
 import { planBounds } from '../view3d/pieces';
+import { planCabinets, type CabinetPlan } from '../cabinets/layout';
+import { runForFace } from '../cabinets/ops';
+import { pruneCabinets, type CabinetsData } from '../cabinets/project';
+import { cabinetAt, cabinetOverlay, faceAt, type CabinetOverlay } from './cabinet-overlay';
+import { onRunPanelChange, onRunPanelClick, renderRunPanel, type PanelActions, type PanelContext, type RunSelection } from './cabinet-panel';
 import { History } from './history';
 import { hitTest } from './hit';
 import {
@@ -22,7 +27,13 @@ import {
 import { drawPlan, toWorld, type Selection, type View } from './plan-canvas';
 import { draftEnd, snapPoint, type Snap } from './snap';
 
-export type Tool = 'select' | 'wall' | 'door' | 'window' | 'opening' | 'room';
+export type Tool = 'select' | 'wall' | 'door' | 'window' | 'opening' | 'room' | 'cabinets';
+
+/** What the editor edits and undoes as one: the plan and its cabinets. */
+export interface EditorDoc {
+  plan: Plan;
+  cabinets: CabinetsData;
+}
 
 interface Draft {
   start: Point;
@@ -35,8 +46,8 @@ export interface EditorHost {
   svg: SVGSVGElement;
   bar: HTMLElement;
   panel: HTMLElement;
-  /** Called after every change with the current plan, for the 3D view. */
-  onPlanChange(plan: Plan): void;
+  /** Called after every change to the plan or the cabinets (for the 3D view and saving). */
+  onChange(doc: EditorDoc): void;
   /** Called when the tool changes, for highlighting toolbar buttons. */
   onToolChange(tool: Tool): void;
   onHistoryChange(canUndo: boolean, canRedo: boolean): void;
@@ -45,22 +56,26 @@ export interface EditorHost {
 }
 
 const PICK_PX = 10;
+/** How far in front of a wall face a click still picks that face for cabinets, in inches. */
+const FACE_REACH = 36;
 const DRAG_PX = 4;
 const fmt = (n: number): string => formatFraction(n, 16);
 
 export class Editor {
-  readonly history: History;
+  readonly history: History<EditorDoc>;
   settings: ProjectSettings;
   private tool: Tool = 'select';
   private selection: Selection = null;
   private draft: Draft | null = null;
   private view: View = { cx: 0, cy: 0, s: 2 };
   private geometry: Map<string, WallGeometry>;
+  private planned!: CabinetPlan;
+  private overlay!: CabinetOverlay;
   private hoverWall?: string;
   private hoverSnap?: Snap;
   private message = '';
   private pointers = new Map<number, Point>();
-  private press: { id: number; start: Point; moved: boolean; mode: 'pan' | 'drag-corner' | 'click'; corner?: Point; before?: Plan; viewStart?: View } | null = null;
+  private press: { id: number; start: Point; moved: boolean; mode: 'pan' | 'drag-corner' | 'click'; corner?: Point; before?: EditorDoc; viewStart?: View } | null = null;
   private pinch: { dist: number; mid: Point; view: View } | null = null;
   private ids = randomIds;
   private lastSize: { width: number; height: number } | null = null;
@@ -69,8 +84,9 @@ export class Editor {
     private readonly host: EditorHost,
     plan: Plan,
     settings: ProjectSettings,
+    cabinets: CabinetsData,
   ) {
-    this.history = new History(plan);
+    this.history = new History<EditorDoc>({ plan, cabinets });
     this.settings = { ...settings };
     this.geometry = wallGeometry(plan);
     this.bindEvents();
@@ -80,7 +96,11 @@ export class Editor {
   }
 
   get plan(): Plan {
-    return this.history.plan;
+    return this.history.value.plan;
+  }
+
+  get cabinets(): CabinetsData {
+    return this.history.value.cabinets;
   }
 
   setTool(tool: Tool): void {
@@ -88,7 +108,7 @@ export class Editor {
     this.draft = null;
     this.hoverWall = undefined;
     this.message = '';
-    if (tool !== 'select') this.selection = null;
+    if (tool !== 'select' && !(tool === 'cabinets' && this.selection?.kind === 'run')) this.selection = null;
     this.host.onToolChange(tool);
     this.renderAll();
   }
@@ -115,11 +135,12 @@ export class Editor {
    * Replaces the plan and settings, for opening a file. This is an ordinary undoable change, so
    * undo brings the previous plan back.
    */
-  load(plan: Plan, settings: ProjectSettings): void {
+  load(plan: Plan, settings: ProjectSettings, cabinets: CabinetsData): void {
     this.settings = { ...settings };
     this.selection = null;
     this.draft = null;
-    this.commit(plan);
+    this.history.push({ plan, cabinets });
+    this.changed(true);
     this.setTool('select');
     this.fit();
     this.host.onSettingsChange?.(this.settings);
@@ -143,8 +164,23 @@ export class Editor {
 
   // ---- changes ---------------------------------------------------------------------------
 
+  /**
+   * Records a plan change. Cabinets on walls that no longer exist are removed in the same undoable
+   * step, and the editor says so.
+   */
   private commit(plan: Plan): void {
-    this.history.push(plan);
+    const { data, removed } = pruneCabinets(plan, this.cabinets);
+    this.history.push({ plan, cabinets: data });
+    if (removed.runs.length) {
+      const n = removed.items.length;
+      this.message = `Removed ${n ? `${n} cabinet${n === 1 ? '' : 's'} and ` : ''}the cabinet run${removed.runs.length === 1 ? '' : 's'} on the deleted wall. Undo brings ${n || removed.runs.length > 1 ? 'them' : 'it'} back.`;
+    }
+    this.changed(true);
+  }
+
+  /** Records a cabinets change. */
+  commitCabinets(cabinets: CabinetsData): void {
+    this.history.push({ plan: this.plan, cabinets });
     this.changed(true);
   }
 
@@ -154,7 +190,13 @@ export class Editor {
     const s = this.selection;
     if (s?.kind === 'wall' && !this.plan.walls.some((w) => w.id === s.id)) this.selection = null;
     if (s?.kind === 'opening' && !this.plan.openings.some((o) => o.id === s.id)) this.selection = null;
-    if (notify) this.host.onPlanChange(this.plan);
+    this.planned = planCabinets(this.plan, this.cabinets);
+    this.overlay = cabinetOverlay(this.planned, this.cabinets.settings);
+    if (s?.kind === 'run') {
+      if (!this.cabinets.runs.some((r) => r.id === s.runId)) this.selection = null;
+      else if (s.open && !this.cabinets.items.some((i) => i.id === s.open)) this.selection = { ...s, open: undefined };
+    }
+    if (notify) this.host.onChange(this.history.value);
     this.host.onHistoryChange(this.history.canUndo, this.history.canRedo);
     this.renderAll();
   }
@@ -278,7 +320,7 @@ export class Editor {
         corner = hit.point;
       } else if (!hit) mode = 'pan';
     }
-    this.press = { id: e.pointerId, start: p, moved: false, mode, corner, before: this.plan, viewStart: { ...this.view } };
+    this.press = { id: e.pointerId, start: p, moved: false, mode, corner, before: this.history.value, viewStart: { ...this.view } };
   }
 
   private onMove(e: PointerEvent): void {
@@ -307,12 +349,13 @@ export class Editor {
         return;
       }
       if (press.moved && press.mode === 'drag-corner' && press.corner) {
-        const others = { ...press.before!, walls: press.before!.walls.filter((w) => !samePoint(w.a, press.corner!) && !samePoint(w.b, press.corner!)) };
+        const before = press.before!.plan;
+        const others = { ...before, walls: before.walls.filter((w) => !samePoint(w.a, press.corner!) && !samePoint(w.b, press.corner!)) };
         const snap = snapPoint(others, world, PICK_PX / this.view.s);
         this.hoverSnap = snap;
-        this.history.replace(moveEndpoint(press.before!, press.corner, snap.point));
+        this.history.replace({ ...press.before!, plan: moveEndpoint(before, press.corner, snap.point) });
         this.geometry = wallGeometry(this.plan);
-        this.host.onPlanChange(this.plan);
+        this.host.onChange(this.history.value);
         this.render();
         return;
       }
@@ -325,6 +368,8 @@ export class Editor {
     } else if (this.tool === 'door' || this.tool === 'window' || this.tool === 'opening') {
       const hit = hitTest(this.plan, this.geometry, world, tol);
       this.hoverWall = hit?.kind === 'wall' ? hit.id : undefined;
+    } else if (this.tool === 'cabinets') {
+      this.hoverWall = cabinetAt(this.overlay, world, false) ? undefined : faceAt(this.geometry, world, FACE_REACH)?.wallId;
     } else {
       this.hoverSnap = undefined;
     }
@@ -344,7 +389,7 @@ export class Editor {
       const after = this.plan;
       this.history.replace(press.before!);
       this.hoverSnap = undefined;
-      if (after !== press.before) this.commit(after);
+      if (after !== press.before!.plan) this.commit(after);
       return;
     }
     if (press.moved) return;
@@ -396,10 +441,33 @@ export class Editor {
         this.host.panel.querySelector<HTMLInputElement>('#room-name')?.focus();
         return;
       }
+      case 'cabinets': {
+        if (this.selectCabinetAt(world)) return;
+        const face = faceAt(this.geometry, world, FACE_REACH);
+        if (!face) {
+          this.message = 'Click on a wall, or in front of one, to plan cabinets on it.';
+          this.renderAll();
+          return;
+        }
+        const r = runForFace(this.plan, this.cabinets, face.wallId, face.face, world, this.ids);
+        if (!r.ok) {
+          this.message = r.error;
+          this.renderAll();
+          return;
+        }
+        this.selection = { kind: 'run', runId: r.id!, row: 'base' };
+        if (r.created) {
+          this.commitCabinets(r.data);
+          this.message = 'New cabinet run. Add cabinets below; positions are measured from the end shown in blue.';
+          this.renderAll();
+        } else this.renderAll();
+        return;
+      }
       case 'select': {
         const hit = hitTest(this.plan, this.geometry, world, tol);
         if (hit?.kind === 'wall') this.selection = { kind: 'wall', id: hit.id };
         else if (hit?.kind === 'opening') this.selection = { kind: 'opening', id: hit.id };
+        else if (this.selectCabinetAt(world)) return;
         else {
           const room = detectRooms(this.plan).find((r) => pointInPolygon(world, r.centerline));
           this.selection = room ? { kind: 'room', at: world } : null;
@@ -407,6 +475,17 @@ export class Editor {
         this.renderAll();
       }
     }
+  }
+
+  /** Selects the run of the cabinet under the point and opens that cabinet. */
+  private selectCabinetAt(world: Point): boolean {
+    const s = this.selection;
+    const sh = cabinetAt(this.overlay, world, s?.kind === 'run' && s.row === 'upper');
+    if (!sh) return false;
+    const upper = sh.kind === 'upper' || sh.kind === 'corner';
+    this.selection = { kind: 'run', runId: sh.runId, row: upper ? 'upper' : 'base', open: sh.itemId };
+    this.renderAll();
+    return true;
   }
 
   private onWheel(e: WheelEvent): void {
@@ -445,6 +524,7 @@ export class Editor {
       this.deleteSelection();
     } else if (e.key === 'w' || e.key === 'W') this.setTool('wall');
     else if (e.key === 'v' || e.key === 'V') this.setTool('select');
+    else if (e.key === 'c' || e.key === 'C') this.setTool('cabinets');
   }
 
   private onBarKey(e: KeyboardEvent): void {
@@ -496,7 +576,37 @@ export class Editor {
 
   // ---- panel ---------------------------------------------------------------------------
 
+  private panelContext(): PanelContext | null {
+    const s = this.selection;
+    if (s?.kind !== 'run') return null;
+    return { data: this.cabinets, planned: this.planned, sel: s, openingKinds: new Map(this.plan.openings.map((o) => [o.id, o.kind])) };
+  }
+
+  private panelActions(): PanelActions {
+    return {
+      commit: (data) => {
+        this.message = '';
+        this.commitCabinets(data);
+      },
+      select: (sel: RunSelection | null) => {
+        this.selection = sel;
+        this.renderAll();
+      },
+      say: (msg) => {
+        this.message = msg;
+        this.renderAll();
+      },
+      ids: this.ids,
+    };
+  }
+
   private onPanelClick(e: Event): void {
+    const cab = (e.target as HTMLElement).closest<HTMLElement>('[data-cab]');
+    const ctx = this.panelContext();
+    if (cab && ctx) {
+      onRunPanelClick(ctx, cab, this.panelActions());
+      return;
+    }
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-action]');
     if (!el) return;
     if (el.dataset.action === 'delete') this.deleteSelection();
@@ -508,6 +618,11 @@ export class Editor {
 
   private onPanelChange(e: Event): void {
     const el = e.target as HTMLInputElement | HTMLSelectElement;
+    const ctx = this.panelContext();
+    if (el.dataset.cabfield && ctx) {
+      onRunPanelChange(ctx, el, this.panelActions());
+      return;
+    }
     const field = el.dataset.field;
     if (!field) return;
     const s = this.selection;
@@ -591,6 +706,8 @@ export class Editor {
       hoverWall: this.hoverWall,
       draft,
       snap: this.tool === 'wall' || this.press?.mode === 'drag-corner' ? this.hoverSnap : undefined,
+      cabinets: this.overlay,
+      showRuns: this.tool === 'cabinets',
     });
   }
 
@@ -603,6 +720,7 @@ export class Editor {
       window: 'Click on a wall to add a window.',
       opening: 'Click on a wall to add an opening with no door.',
       room: 'Click inside a room to name it.',
+      cabinets: 'Click a wall, or in front of one, to plan cabinets on it. Click a cabinet to edit it.',
     };
     const msg = this.message ? `<span class="bar-message" role="status">${escapeHtml(this.message)}</span>` : '';
     if (this.tool === 'wall' && this.draft) {
@@ -622,7 +740,9 @@ export class Editor {
     const field = (label: string, name: string, value: string, note = '') =>
       `<label class="field"><span>${label}</span><input class="in" data-field="${name}" value="${escapeHtml(value)}" inputmode="decimal" autocomplete="off"></label>${note ? `<p class="note">${note}</p>` : ''}`;
     let html = '';
-    if (s?.kind === 'wall') {
+    const ctx = this.panelContext();
+    if (ctx) html = renderRunPanel(ctx);
+    else if (s?.kind === 'wall') {
       const g = this.geometry.get(s.id);
       if (g) {
         html = `<h2>Wall</h2>
