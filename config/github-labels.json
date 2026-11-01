@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "labels": [
+    { "name": "priority:critical", "color": "B60205", "description": "Immediate service, security, or data risk" },
+    { "name": "priority:high", "color": "D93F0B", "description": "High impact or blocks the current milestone" },
+    { "name": "priority:medium", "color": "FBCA04", "description": "Normal planned work" },
+    { "name": "priority:low", "color": "0E8A16", "description": "Useful but not urgent" },
+    { "name": "type:feature", "color": "1D76DB", "description": "Product capability" },
+    { "name": "type:bug", "color": "D73A4A", "description": "Unexpected or incorrect behavior" },
+    { "name": "type:infrastructure", "color": "5319E7", "description": "Deployment, hosting, or operational work" },
+    { "name": "type:research", "color": "D4C5F9", "description": "Investigation or decision evidence" },
+    { "name": "type:security", "color": "B60205", "description": "Security improvement; report sensitive vulnerabilities privately" },
+    { "name": "type:tech-debt", "color": "7057FF", "description": "Maintenance and technical debt" },
+    { "name": "type:documentation", "color": "0075CA", "description": "Project documentation" },
+    { "name": "area:frontend", "color": "C2E0C6", "description": "User interface" },
+    { "name": "area:backend", "color": "C2E0C6", "description": "Application services and APIs" },
+    { "name": "area:database", "color": "C2E0C6", "description": "Persistence and data model" },
+    { "name": "area:infrastructure", "color": "C2E0C6", "description": "Runtime and deployment environment" },
+    { "name": "area:integration", "color": "C2E0C6", "description": "External systems and bridges" },
+    { "name": "area:documentation", "color": "C2E0C6", "description": "Documentation and decisions" },
+    { "name": "agent:claude", "color": "D4C5F9", "description": "Work primarily implemented or reviewed by Claude Code" },
+    { "name": "agent:codex", "color": "C5DEF5", "description": "Work primarily implemented or reviewed by OpenAI Codex" },
+    { "name": "review:needed", "color": "FBCA04", "description": "Ready for review by a human or another agent" }
+  ]
+}
