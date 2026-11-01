@@ -40,6 +40,8 @@ export interface EditorHost {
   /** Called when the tool changes, for highlighting toolbar buttons. */
   onToolChange(tool: Tool): void;
   onHistoryChange(canUndo: boolean, canRedo: boolean): void;
+  /** Called when the default wall thickness or height changes. */
+  onSettingsChange?(settings: ProjectSettings): void;
 }
 
 const PICK_PX = 10;
@@ -109,6 +111,20 @@ export class Editor {
     this.renderAll();
   }
 
+  /**
+   * Replaces the plan and settings, for opening a file. This is an ordinary undoable change, so
+   * undo brings the previous plan back.
+   */
+  load(plan: Plan, settings: ProjectSettings): void {
+    this.settings = { ...settings };
+    this.selection = null;
+    this.draft = null;
+    this.commit(plan);
+    this.setTool('select');
+    this.fit();
+    this.host.onSettingsChange?.(this.settings);
+  }
+
   /** Fits the whole plan in the canvas. */
   fit(): void {
     const { width, height } = this.size();
@@ -146,6 +162,15 @@ export class Editor {
   private afterHistoryMove(): void {
     this.draft = null;
     this.changed(true);
+    // Undoing across a very different plan (for example after opening a file) can leave it out of view.
+    const b = planBounds(this.plan);
+    if (b) {
+      const { width, height } = this.size();
+      const hx = width / 2 / this.view.s;
+      const hy = height / 2 / this.view.s;
+      const inside = b.min.x >= this.view.cx - hx && b.max.x <= this.view.cx + hx && b.min.y >= this.view.cy - hy && b.max.y <= this.view.cy + hy;
+      if (!inside) this.fit();
+    }
   }
 
   private apply(r: { ok: true; plan: Plan; id?: string } | { ok: false; error: string }): string | undefined {
@@ -499,6 +524,7 @@ export class Editor {
       if (v !== null && v > 0) {
         if (field === 'defaultThickness') this.settings.wallThickness = v;
         else this.settings.wallHeight = v;
+        this.host.onSettingsChange?.(this.settings);
       }
       this.renderAll();
       return;
