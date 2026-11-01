@@ -41,10 +41,10 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
    Tests.
 4. [x] `src/cabinets/corners.ts`: inside corners where two runs start at the same face corner, with the owner run. Tests.
 5. [x] Fixture generator: `tests/fixtures/prototype-layout.json`, with about 10 room and layout scenarios run through the prototype's `layoutWalls`, `renderWall` (countertop) and `addToeKick`. Each scenario is written in a neutral form the test can turn into a plan.
-6. [~] `src/cabinets/layout.ts`: port `layoutWalls` per run (row starts per corner, openings and stove blocks, fixed modes, flow, snapping, gaps, checks, sink and fridge checks)
-7. [ ] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
-8. [ ] Golden layout tests: each scenario drawn as an L-shaped plan with runs, a corner, a window opening and a stove item, compared with the prototype
-9. [ ] Project file v2: `Project.cabinets`, serialize (`settings.cabinets` plus top-level `cabinets`), validation with located messages, migration 1→2, and `pruneCabinets` for runs whose walls are gone. Update the `main.ts` carry-through, `sample.ts` and the storage and file tests.
+6. [x] `src/cabinets/layout.ts`: port `layoutWalls` per run (row starts per corner, openings and stove blocks, fixed modes, flow, snapping, gaps, checks, sink and fridge checks)
+7. [x] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
+8. [x] Golden layout tests: each scenario drawn as an L-shaped plan with runs, a corner, a window opening and a stove item, compared with the prototype
+9. [~] Project file v2: `Project.cabinets`, serialize (`settings.cabinets` plus top-level `cabinets`), validation with located messages, migration 1→2, and `pruneCabinets` for runs whose walls are gone. Update the `main.ts` carry-through, `sample.ts` and the storage and file tests.
 10. [ ] Docs:
     - `data-model.md` for v2
     - ADR-003 implementation notes
@@ -55,17 +55,14 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Steps 6 and 7: write `src/cabinets/layout.ts`, porting `layoutWalls` (prototype lines 985–1134), the countertop from `renderWall` (lines 1316–1331), `addToeKick` (lines 757–771) and the platform-run merge (lines 914–922). The entry point is `planCabinets(plan, data)`:
+Step 9, project file v2, in `src/model/project-file.ts`:
 
-1. Build every item with its label. Blind items on a run get `blindSide = rightward ? 'left' : 'right'`.
-2. Get the run geometries and resolve corners.
-3. Per corner, find the blind, diagonal and blind upper cabinets, then the row starts.
-4. Openings: windows block the upper row (and the base row if the sill is below countertop height). Doors and openings block both rows. Stove items are base-row blocks named 'stove' and are placed by `at`.
-5. Flow, fixed pieces and snapping per row. Gaps.
-6. Checks, in the prototype's order: per run (openings past the end, sink, overruns, gaps); then per corner (blind upper); then fridge clearance across all runs; then per corner (diagonal plus blind upper, base blind).
-7. Countertop runs, toe kick parts and platform runs.
-
-Warnings: build warnings first, in list order, then layout warnings. Messages and ids exactly as the prototype's. The fixture is `tests/fixtures/prototype-layout.json`; each scenario's `cabs` and `room` say how to build the plan (see the generator).
+- `FILE_VERSION = 2`, and `Project.cabinets: CabinetsData`, required.
+- Serialize as `settings.cabinets` (the cabinet settings) plus a top-level `cabinets` (runs, corners, items, grainFree, sheetLayouts).
+- `MIGRATIONS[1]` adds an empty `cabinets` section. Missing cabinet settings come from the defaults.
+- Validate with located messages: settings (types and positivity as the prototype's settings check), runs (wallIds exist; face and from), corners (two existing runs, owner one of them), items (a unique id, a run or a corner that exists, the input type and numbers, the position mode and its references, snap), grain keys, and sheet layouts (basic shape). Item ids must not collide with plan ids.
+- Add `pruneCabinets(plan, data)`: drop runs whose walls are all gone, plus their items, corners and line-ups, and report what was dropped.
+- Update `sample.ts` (empty cabinets), `main.ts` (a `cabinetsByPlan` WeakMap like `namesByPlan`, carried through open, save, autosave and undo of an open), and the tests in `project-file.test.ts` and `storage.test.ts`, including a test that opens a version 1 file.
 
 ## Decisions made while working
 
@@ -88,6 +85,7 @@ None yet.
 
 ## Checks run
 
+- Steps 6–8: `planCabinets` matches all 12 prototype layout scenarios on a real L plan: row starts and ends, every item's position and fixed flag, gaps, window center and sink offset, countertop runs, all warnings in order with exact text, toe kick strips, platform runs and corner gaps. A mutation check (packing direction, countertop merge distance) failed 10 of 12. Full suite: 15 files pass (see the totals in the final checks).
 - Step 5: the generator wrote 12 layout scenarios. `prototype-cabinets.json` and `prototype-sheets.json` are unchanged.
 - Step 4: corner tests pass (11 in the runs suite): an L corner owned by the right wall by default, a saved owner kept, a stale corner reported, and an outside corner ignored.
 - Step 3: `tests/cabinets-runs.test.ts` passes 7 tests: an L measured from the inside corner, `from: b`, openings mapped, a split wall with a backward second piece, walls meeting the back or the face, unsplit T, thickness change, and missing walls. One fix was in my test data: a T has to end on the other wall's centerline.
