@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runGeometry, type CabinetRun, type RunGeometry } from '../src/cabinets';
+import { findCorners, resolveCorners, runGeometry, type CabinetRun, type RunGeometry } from '../src/cabinets';
 import type { Opening, Plan, Wall } from '../src/model/types';
 
 const T = 4.5;
@@ -87,5 +87,37 @@ describe('run geometry', () => {
   it('reports a run whose walls are gone', () => {
     const r = runGeometry(L(), { ...leftRun, wallIds: ['nope'] });
     expect(r.ok).toBe(false);
+  });
+});
+
+describe('corners', () => {
+  const geoms = (plan: Plan, runs: CabinetRun[]) => runs.map((r) => ok(runGeometry(plan, r)));
+
+  it('finds the inside corner of an L, owned by the right wall by default', () => {
+    const { corners, stale } = resolveCorners([], geoms(L(), [leftRun, rightRun]));
+    expect(corners).toEqual([{ id: 'corner:L|R', runIds: ['L', 'R'], owner: 'R', saved: false }]);
+    expect(stale).toEqual([]);
+  });
+
+  it('keeps a saved corner and its owner', () => {
+    const saved = [{ id: 'c1', runIds: ['R', 'L'] as [string, string], owner: 'L' }];
+    expect(resolveCorners(saved, geoms(L(), [leftRun, rightRun])).corners).toEqual([{ id: 'c1', runIds: ['R', 'L'], owner: 'L', saved: true }]);
+  });
+
+  it('reports a saved corner whose runs no longer meet', () => {
+    const saved = [{ id: 'c1', runIds: ['R', 'L'] as [string, string], owner: 'L' }];
+    const r = resolveCorners(saved, geoms(L(), [leftRun, { ...rightRun, from: 'b' }]));
+    expect(r.corners).toEqual([]);
+    expect(r.stale).toEqual(saved);
+  });
+
+  it('an outside corner is not a cabinet corner', () => {
+    // the outer faces of the L meet at (-4.5, -4.5)
+    const outerLeft: CabinetRun = { ...leftRun, face: 'right' };
+    const outerRight: CabinetRun = { ...rightRun, face: 'left' };
+    const g = geoms(L(), [outerLeft, outerRight]);
+    expect(g[0]!.origin.x).toBeCloseTo(-T, 9);
+    expect(g[1]!.origin.y).toBeCloseTo(-T, 9);
+    expect(findCorners(g)).toEqual([]);
   });
 });

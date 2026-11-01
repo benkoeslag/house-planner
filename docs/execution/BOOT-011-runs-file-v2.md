@@ -39,8 +39,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
    - usable length
    - openings mapped to run positions
    Tests.
-4. [~] `src/cabinets/corners.ts`: inside corners where two runs start at the same face corner, with the owner run. Tests.
-5. [ ] Fixture generator: `tests/fixtures/prototype-layout.json`, with about 10 room and layout scenarios run through the prototype's `layoutWalls`, `renderWall` (countertop) and `addToeKick`. Each scenario is written in a neutral form the test can turn into a plan.
+4. [x] `src/cabinets/corners.ts`: inside corners where two runs start at the same face corner, with the owner run. Tests.
+5. [~] Fixture generator: `tests/fixtures/prototype-layout.json`, with about 10 room and layout scenarios run through the prototype's `layoutWalls`, `renderWall` (countertop) and `addToeKick`. Each scenario is written in a neutral form the test can turn into a plan.
 6. [ ] `src/cabinets/layout.ts`: port `layoutWalls` per run (row starts per corner, openings and stove blocks, fixed modes, flow, snapping, gaps, checks, sink and fridge checks)
 7. [ ] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
 8. [ ] Golden layout tests: each scenario drawn as an L-shaped plan with runs, a corner, a window opening and a stove item, compared with the prototype
@@ -55,12 +55,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 4: write `src/cabinets/corners.ts`.
+Step 5: extend `scripts/prototype-fixtures.mjs` with `LAYOUTS`. Each scenario is in neutral form:
 
-- `findCorners(runGeometries)` gives pairs of ok runs whose origins coincide (`samePoint`) and form an inside corner: each run's direction points into the other's room side, `dot(u2, n1) > 0` and `dot(u1, n2) > 0`.
-- `resolveCorners(data.corners, found)`: a saved corner keeps its owner when its two runs still form a corner. A new pair gets a corner with no stored owner, and the default owner is the rightward run (the prototype's default, the right wall). Saved corners whose runs no longer meet are reported.
+```
+{ name, room: { leftLen, rightLen, stoveWall, stoveFrom, stoveW, winWall, winFrom, winW, cornerOwner, gapAt },
+  settings?, cabs: [{ input, wall, pos, at, snap, alignTo (index), alignSide }] }
+```
 
-Tests use the L from `tests/cabinets-runs.test.ts`, plus an outside corner and two runs that meet at their far ends (not a corner, since corners are at starts only).
+- Run each through the prototype. Set `cabs`, call `fullCompute()`, and call `renderWall` on each wall for its countertop runs.
+- Write `tests/fixtures/prototype-layout.json`: ids, the walls (starts, ends, items, gaps, window center, sink offset, countertop runs), warnings, toe kick parts and platform runs.
+- Expose `setCabs`, `renderWall` and `computeIds` in the generator's copy of the page.
 
 ## Decisions made while working
 
@@ -83,6 +87,7 @@ None yet.
 
 ## Checks run
 
+- Step 4: corner tests pass (11 in the runs suite): an L corner owned by the right wall by default, a saved owner kept, a stale corner reported, and an outside corner ignored.
 - Step 3: `tests/cabinets-runs.test.ts` passes 7 tests: an L measured from the inside corner, `from: b`, openings mapped, a split wall with a backward second piece, walls meeting the back or the face, unsplit T, thickness change, and missing walls. One fix was in my test data: a T has to end on the other wall's centerline.
 - Step 2: typecheck passes. The project and golden suites pass (99): labels match the prototype's numbering, and the stove space is 30 wide with 30 1/4 on the wall and 36 tall.
 
