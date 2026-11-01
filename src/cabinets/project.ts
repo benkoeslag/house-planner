@@ -99,3 +99,29 @@ export function itemLabels(items: readonly Pick<CabinetItem, 'id' | 'input'>[]):
   }
   return out;
 }
+
+/**
+ * Drops runs whose walls are all gone, with their items and corners, and the diagonal uppers in
+ * those corners. Items that lined up with a dropped item go back to list order. Returns what was
+ * dropped so the editor can say so (and undo it).
+ */
+export function pruneCabinets(
+  plan: { walls: readonly { id: string }[] },
+  data: CabinetsData,
+): { data: CabinetsData; removed: { runs: CabinetRun[]; corners: CabinetCorner[]; items: CabinetItem[] } } {
+  const wallIds = new Set(plan.walls.map((w) => w.id));
+  const deadRuns = data.runs.filter((r) => !r.wallIds.some((id) => wallIds.has(id)));
+  if (!deadRuns.length) return { data, removed: { runs: [], corners: [], items: [] } };
+  const deadRunIds = new Set(deadRuns.map((r) => r.id));
+  const deadCorners = data.corners.filter((c) => c.runIds.some((id) => deadRunIds.has(id)));
+  const deadCornerIds = new Set(deadCorners.map((c) => c.id));
+  const deadItems = data.items.filter((it) => (it.runId !== undefined && deadRunIds.has(it.runId)) || (it.cornerId !== undefined && deadCornerIds.has(it.cornerId)));
+  const deadItemIds = new Set(deadItems.map((it) => it.id));
+  const items = data.items
+    .filter((it) => !deadItemIds.has(it.id))
+    .map((it) => (it.position.mode === 'align' && deadItemIds.has(it.position.itemId) ? { ...it, position: { mode: 'flow' as const } } : it));
+  return {
+    data: { ...data, runs: data.runs.filter((r) => !deadRunIds.has(r.id)), corners: data.corners.filter((c) => !deadCornerIds.has(c.id)), items },
+    removed: { runs: deadRuns, corners: deadCorners, items: deadItems },
+  };
+}

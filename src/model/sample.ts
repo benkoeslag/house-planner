@@ -1,3 +1,4 @@
+import { emptyCabinets } from '../cabinets/project';
 import type { Project } from './project-file';
 
 /**
@@ -23,5 +24,6 @@ export function sampleProject(): Project {
       ],
       roomLabels: [{ id: 'label-1', name: 'Kitchen', at: { x: 72, y: 84 } }],
     },
+    cabinets: emptyCabinets(),
   };
 }

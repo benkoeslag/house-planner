@@ -44,8 +44,8 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 6. [x] `src/cabinets/layout.ts`: port `layoutWalls` per run (row starts per corner, openings and stove blocks, fixed modes, flow, snapping, gaps, checks, sink and fridge checks)
 7. [x] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
 8. [x] Golden layout tests: each scenario drawn as an L-shaped plan with runs, a corner, a window opening and a stove item, compared with the prototype
-9. [~] Project file v2: `Project.cabinets`, serialize (`settings.cabinets` plus top-level `cabinets`), validation with located messages, migration 1→2, and `pruneCabinets` for runs whose walls are gone. Update the `main.ts` carry-through, `sample.ts` and the storage and file tests.
-10. [ ] Docs:
+9. [x] Project file v2: `Project.cabinets`, serialize (`settings.cabinets` plus top-level `cabinets`), validation with located messages, migration 1→2, and `pruneCabinets` for runs whose walls are gone. Update the `main.ts` carry-through, `sample.ts` and the storage and file tests.
+10. [~] Docs:
     - `data-model.md` for v2
     - ADR-003 implementation notes
     - `cabinet-rules.md` changes (stove item, runs)
@@ -55,14 +55,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 9, project file v2, in `src/model/project-file.ts`:
+Step 10:
 
-- `FILE_VERSION = 2`, and `Project.cabinets: CabinetsData`, required.
-- Serialize as `settings.cabinets` (the cabinet settings) plus a top-level `cabinets` (runs, corners, items, grainFree, sheetLayouts).
-- `MIGRATIONS[1]` adds an empty `cabinets` section. Missing cabinet settings come from the defaults.
-- Validate with located messages: settings (types and positivity as the prototype's settings check), runs (wallIds exist; face and from), corners (two existing runs, owner one of them), items (a unique id, a run or a corner that exists, the input type and numbers, the position mode and its references, snap), grain keys, and sheet layouts (basic shape). Item ids must not collide with plan ids.
-- Add `pruneCabinets(plan, data)`: drop runs whose walls are all gone, plus their items, corners and line-ups, and report what was dropped.
-- Update `sample.ts` (empty cabinets), `main.ts` (a `cabinetsByPlan` WeakMap like `namesByPlan`, carried through open, save, autosave and undo of an open), and the tests in `project-file.test.ts` and `storage.test.ts`, including a test that opens a version 1 file.
+- `docs/data-model.md`: version 2 entities and the cabinets section, migration 1→2, and what may dangle.
+- ADR-003: an implementation notes section with the decisions above (corner style from cabinets, labels in list order, stove as an item, runs over the whole straight face, one corner per run at its start, `sheetLayouts` as a list, lenient plan references).
+- `docs/cabinet-rules.md`: the "runs on the plan" changes, and the stove as an item with its `at` start including the overhang.
+- Architecture, review queue R-019, work record BOOT-011, roadmap.
+- Then run all checks, fill in the PR #11 description, and mark it ready.
 
 ## Decisions made while working
 
@@ -81,10 +80,12 @@ Step 9, project file v2, in `src/model/project-file.ts`:
 
 ## Tried and did not work
 
-None yet.
+- The first app check compared JSON text, which is sensitive to key order, and reported a false difference. A structural comparison shows the cabinets are identical.
+- `pkill -f`/`pgrep -f` with a plain pattern matched the shell's own command and killed it, so nothing was committed (nothing was lost). Use a bracket pattern such as `pgrep -f "[v]ite.*preview"`.
 
 ## Checks run
 
+- Step 9: file v2 tests pass: writing, an exact round trip of the starter kitchen (it lays out the same), a version 1 file opened unchanged, defaults filled, zeros accepted, 19 located-error cases, dangling plan references kept and reported, pruning, and autosave. Full suite: 19 files, 327 tests. App check in headless Chromium against the built app: a v2 autosave keeps its cabinets after a rename, opening a v1 file gives empty cabinets, and undo brings the 16 cabinets back. No page errors.
 - Steps 6–8: `planCabinets` matches all 12 prototype layout scenarios on a real L plan: row starts and ends, every item's position and fixed flag, gaps, window center and sink offset, countertop runs, all warnings in order with exact text, toe kick strips, platform runs and corner gaps. A mutation check (packing direction, countertop merge distance) failed 10 of 12. Full suite: 15 files pass (see the totals in the final checks).
 - Step 5: the generator wrote 12 layout scenarios. `prototype-cabinets.json` and `prototype-sheets.json` are unchanged.
 - Step 4: corner tests pass (11 in the runs suite): an L corner owned by the right wall by default, a saved owner kept, a stale corner reported, and an outside corner ignored.
