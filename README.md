@@ -6,9 +6,9 @@ The project is developed by the owner and multiple coding agents, primarily Clau
 
 ## Status
 
-Milestone M0 (foundation) is in progress: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) have been migrated in. No application code exists yet.
+Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress; the app currently shows an empty 3D scene.
 
-What the owner has decided so far is recorded in [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md). The application stack is proposed but not yet accepted; see [`docs/architecture.md`](docs/architecture.md).
+What the owner has decided so far is recorded in [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md). The application stack is a TypeScript browser app (Vite, three.js, Vitest); see [`docs/architecture.md`](docs/architecture.md).
 
 ## Planned scope
 
@@ -48,11 +48,19 @@ Use PowerShell 7:
 pwsh -File ./scripts/Test-Template.ps1
 ```
 
-Application build, test, and lint checks will be added when the stack is accepted.
+Application checks (Node.js 22 or newer):
+
+```bash
+npm ci
+npm run typecheck
+npm test
+npm run build
+npm run dev     # local development server
+```
 
 ## Current status
 
 - Repository: private, owned by `benkoeslag`
 - Development model: branch -> pull request -> review -> human merge
-- Application stack: proposed, awaiting owner acceptance
+- Application stack: accepted, see [ADR-001](decisions/ADR-001-application-stack.md)
 - License: undecided; see `LICENSE`

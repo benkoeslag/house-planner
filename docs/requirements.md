@@ -1,6 +1,6 @@
 # Requirements
 
-Status: Draft. Governance requirements are confirmed; M1 application requirements are proposed and need owner confirmation.
+Status: Draft. Governance requirements and the M1 floor plan requirements are confirmed.
 
 ## Current milestone
 
@@ -17,9 +17,9 @@ M0: Foundation — establish a private, review-first repository and a repeatable
 | WF-005 | All contributors | Keep secrets and private production data out of Git | Ignore rules, instructions, and review checklist state the restriction | M0 |
 | WF-006 | Developer | Run Claude Code and Codex in parallel worktrees | Exact Windows/PowerShell commands are documented | M0 |
 
-## Proposed M1 requirements: floor plan and 3D viewer
+## M1 requirements: floor plan and 3D viewer
 
-Proposed from the owner's 2026-11-01 planning conversation. Not accepted until the owner confirms them.
+From the owner's 2026-11-01 planning conversation; accepted by the owner in chat on 2026-11-01.
 
 | ID | Actor | Required behavior | Acceptance criteria | Milestone |
 | --- | --- | --- | --- | --- |
@@ -35,4 +35,4 @@ Proposed from the owner's 2026-11-01 planning conversation. Not accepted until t
 
 Cabinet planning, wall items and clearance checks, the ceiling plan, and printing are `TBD` until their milestones are defined. Reliability, performance, accessibility, and integrations are `TBD`.
 
-Do not begin product implementation until the owner confirms the M1 acceptance criteria and accepts the application stack.
+Later milestones need their acceptance criteria confirmed before implementation starts.
