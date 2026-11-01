@@ -29,15 +29,20 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 1. [x] Create this plan, push it, and open a draft PR (#9)
 2. [x] Fixture generator: `scripts/prototype-fixtures.mjs` loads the unchanged prototype in headless Chromium and records `buildCab` output for a list of cases, plus a cut list. Commit the generated `tests/fixtures/prototype-cabinets.json`.
 3. [x] `src/cabinets/settings.ts` (defaults from the prototype's `DEF`) and `src/cabinets/types.ts` (cabinet inputs, parts, fronts, hardware, warnings)
-4. [~] `src/cabinets/build.ts`: boxes, doors, drawers, shelves, and the three base layouts
-5. [ ] `src/cabinets/build.ts`: blind base, blind upper, diagonal upper, gables, tall, open shelf, open spaces, custom parts
-6. [ ] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
-7. [ ] Tests: golden comparison with the fixtures, worked examples, and cut list behavior
+4. [x] `src/cabinets/build.ts`: boxes, doors, drawers, shelves, and the three base layouts
+5. [x] `src/cabinets/build.ts`: blind base, blind upper, diagonal upper, gables, tall, open shelf, open spaces, custom parts
+6. [~] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
+7. [~] Tests: golden comparison with the fixtures, worked examples, and cut list behavior
 8. [ ] Docs (architecture, cabinet rules, review queue R-017, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Steps 4 and 5: write `src/cabinets/build.ts`, porting `buildCab` and `buildDiag` (prototype lines 530–742) to `buildCabinet(input, settings, id)`. Use `fmt` from `src/cabinets/format.ts` for messages, so they match the prototype's text. Result fields follow `BuiltCabinet` in `types.ts`, which matches the fixture's `expected` objects.
+Step 6: write `src/cabinets/cutlist.ts`, porting `finalize` without `nest` (prototype lines 772–801), plus `KIND_ORDER`, `MAT_ORDER` and `HIDDEN_PARTS`.
+
+- `buildCutList(parts, settings, grainFree)` returns groups numbered from 1. Grain is `rot || (box && rotBox) || grainFree has grainKey`.
+- Banding length = Σ (l·L + w·W + x)·qty.
+- Hardware totals sum `hw` across cabinets, with slides keyed by length.
+- Then add a cut list golden test against `fixtures.cutlists`, built from `fixtures.starter`.
 
 ## Decisions made while working
 
@@ -54,6 +59,7 @@ Steps 4 and 5: write `src/cabinets/build.ts`, porting `buildCab` and `buildDiag`
 ## Checks run
 
 - Fixture generator ran: 91 cabinet cases and 4 cut lists, from the unchanged prototype. The starter cut list has 85 groups and 4027.10 in of banding.
+- `tests/cabinets-golden.test.ts`: 92 pass. All 91 prototype cases match to 1e-9, including warning text, plus the settings defaults. A deliberate mutation (hinge threshold, drawer box rounding) made them fail, so the test does catch differences. Reverted.
 
 ## Open questions for the owner
 
