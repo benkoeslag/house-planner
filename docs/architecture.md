@@ -39,3 +39,18 @@ Local Git/VS Code operations are documented in `local-development.md`. Applicati
 - **Camera:** orbit, pan and zoom with mouse or touch (three.js `OrbitControls`). The camera keeps its position when the plan changes, except the first time a plan with walls is shown; `fitToPlan` re-aims it.
 - **Drawing** happens on the next animation frame after a change, and only then, so an idle page does no work.
 - **Hook:** `window.houseplanner.setPlan(plan)` and `fitToPlan(plan)` redraw the view. The floor plan editor (package 4) will call the view directly; the hook also allows trying plans from the browser console.
+
+## Floor plan editor
+
+`src/editor/`: pure logic with tests, plus the screen code.
+
+| File | Role |
+| --- | --- |
+| `snap.ts` | Snapping a pointer to wall ends, walls or the inch grid; 90-degree angle snapping; where the wall being drawn ends (typed length and angle win over the pointer) |
+| `ops.ts` | Editing operations on the plan: placing walls with proper junctions (ends snap to wall ends, an end in the middle of a wall splits it, crossing walls are split at the crossing), changing a wall's length (walls joined at the moved end follow), moving corners, placing and changing openings measured from the inside corners, naming rooms |
+| `history.ts` | Undo and redo. Plans are immutable, so history keeps references |
+| `hit.ts` | What is under the pointer: a corner, a door or window, or a wall |
+| `plan-canvas.ts` | Draws the plan as SVG in screen coordinates: grid, floors, walls, openings with door swings, face lengths on both sides of each wall, room names and areas, the wall being drawn, and snap markers |
+| `editor.ts` | Tools, pointer and keyboard handling (mouse, touch and pinch), the typed-length bar, and the properties panel |
+
+The editor tells `main.ts` about every change; `main.ts` rebuilds the 3D view at most once per animation frame. The 2D view keeps its top-left corner still when its size changes, so the plan never shifts under the pointer while drawing.

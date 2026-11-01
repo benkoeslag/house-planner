@@ -6,7 +6,7 @@ The project is developed by the owner and multiple coding agents, primarily Clau
 
 ## Status
 
-Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress; the app currently shows a sample room in 3D.
+Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress. The app has the floor plan editor next to the 3D view; saving and opening files is the last M1 package, so a reload currently starts again from the sample room.
 
 What the owner has decided so far is recorded in [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md). The application stack is a TypeScript browser app (Vite, three.js, Vitest); see [`docs/architecture.md`](docs/architecture.md).
 
@@ -17,6 +17,14 @@ What the owner has decided so far is recorded in [`docs/product-vision.md`](docs
 - **Cabinet planning on any wall**, carrying over a working prototype built during planning: frameless 3/4" maple plywood boxes, fixed pieces, snapping, gables, blind and diagonal corners, cut lists, sheet layouts with an on-demand optimizer, and materials and cost estimates with tax.
 
 The owner's existing SketchUp model is not imported; the house will be redrawn in this tool.
+
+## Using the editor
+
+- **Draw walls:** pick **Wall**, click where the wall starts, then type a length (`142`, `11' 10 3/8"`, `23-5/8`) and press Enter. The direction follows the mouse, snapping to 90 degrees; arrow keys set it, or type an angle (0 = right, 90 = up). Each wall starts where the last one ended. Click the first corner to close the room; Esc stops. Clicking places a wall to the pointer, rounded to the inch, and snaps to existing corners and walls.
+- **Edit:** with **Select**, click a wall to change its length (walls joined at its far end follow), thickness or height. Drag a corner to move it. Delete removes the selection.
+- **Doors, windows, openings:** pick the tool and click on a wall, then type the distance from the inside corner, width, height and sill. Problems (into a corner, overlapping, too tall) show in red.
+- **Rooms** are found automatically; use **Room name** and click inside one to name it. Areas are inside the walls.
+- **View:** drag empty space to pan, scroll or pinch to zoom, **Fit** to see everything. Undo and redo with the buttons or Ctrl+Z / Ctrl+Shift+Z. On a phone, switch between Plan and 3D at the top right.
 
 ## Start here
 
