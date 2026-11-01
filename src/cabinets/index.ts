@@ -4,3 +4,4 @@ export { BANDS, buildCabinet, hingeCount, materialThickness } from './build';
 export * from './cutlist';
 export { fmt, roundCut } from './format';
 export * from './sheets';
+export * from './optimizer';
