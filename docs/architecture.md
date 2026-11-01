@@ -16,14 +16,14 @@ main checkout (owner review)
 
 ## Application boundaries and components
 
-Users, external systems, deployment boundary, trust boundaries, runtime, components, interfaces, and data ownership are `TBD`. The proposed direction is a single-user, client-only application with no accounts, server, or external services.
+Users, external systems, deployment boundary, trust boundaries, runtime, components, interfaces, and data ownership are `TBD`. The accepted direction is a single-user, client-only application with no accounts, server, or external services.
 
 ## Technology decisions
 
 | Decision | Status | ADR |
 | --- | --- | --- |
-| Application runtime and framework | Proposed: browser application in TypeScript, built with Vite, with three.js for the 3D view; awaiting owner acceptance | Create when accepted |
-| Persistence | Proposed: project files (JSON, inches) saved and opened locally, plus browser storage for autosave; no server or database | Create when accepted |
+| Application runtime and framework | Accepted: browser application in TypeScript, built with Vite, with three.js for the 3D view and Vitest for tests | [ADR-001](../decisions/ADR-001-application-stack.md) |
+| Persistence | Accepted: project files (JSON, inches) saved and opened locally, plus browser storage for autosave; no server or database | [ADR-001](../decisions/ADR-001-application-stack.md) |
 | Hosting and deployment | Proposed / `TBD` | Create before deployment work |
 
 ## Operations and risks

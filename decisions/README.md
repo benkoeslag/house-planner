@@ -12,4 +12,4 @@ Use the project's documented decision authority. Routine choices within an autho
 
 | ADR | Title | Status |
 | --- | --- | --- |
-| None yet | Create records when decisions arise | — |
+| [ADR-001](ADR-001-application-stack.md) | Application stack | Accepted |

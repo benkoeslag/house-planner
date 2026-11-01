@@ -127,13 +127,18 @@ Read `README.md` and `docs/product-vision.md` first. The owner's decisions so fa
 
 ### Tools and checks
 
-The application stack is proposed in `docs/architecture.md` and not yet accepted. Until it is, the only check is the scaffold validation:
+The stack is a TypeScript browser app (see [`ADR-001`](decisions/ADR-001-application-stack.md)). Needs Node.js 22 or newer. Run from the repository root:
 
 | Check | Command | Pass |
 | --- | --- | --- |
 | Scaffold | `pwsh -File ./scripts/Test-Template.ps1` | `Template validation passed` |
+| Install | `npm ci` | no errors |
+| Type check | `npm run typecheck` | no errors |
+| Tests | `npm test` | all tests pass |
+| Build | `npm run build` | build completes |
+| Visual changes | `npm run build`, serve `dist/` (for example `npx vite preview`), then look at it in a browser | looks right at desktop and phone width |
 
-Add the application's build, test, and lint commands to this table in the same pull request that introduces them.
+Add any new check (such as lint) to this table in the same pull request that introduces it.
 
 ### Project rules
 
