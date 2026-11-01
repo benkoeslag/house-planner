@@ -35,7 +35,8 @@ The owner's existing SketchUp model is not imported; the house will be redrawn i
 2. Follow [`docs/local-development.md`](docs/local-development.md) to clone the repository and create parallel worktrees.
 3. Read [`docs/product-vision.md`](docs/product-vision.md), [`docs/requirements.md`](docs/requirements.md), and [`docs/architecture.md`](docs/architecture.md).
 4. Track implementation in GitHub issues and consequential decisions in [`decisions/`](decisions/README.md).
-5. Use the pull request template and leave final merging to the human owner.
+5. Check [`docs/review-queue.md`](docs/review-queue.md) for work still waiting for an independent review and for owner decisions.
+6. Use the pull request template and leave final merging to the human owner.
 
 ## Repository map
 
@@ -47,6 +48,7 @@ The owner's existing SketchUp model is not imported; the house will be redrawn i
 | `.github/PULL_REQUEST_TEMPLATE.md` | Review and validation record |
 | `.github/workflows/template-quality.yml` | Offline-safe scaffold validation in CI |
 | `docs/` | Product, architecture, security, workflow, and local-development documentation |
+| `docs/execution/` | Live execution plans, so any agent can pick up a task where the last one stopped |
 | `decisions/` | Architecture Decision Records |
 | `config/` | Standard labels and GitHub Project specification |
 | `scripts/` | Local validation, export, and label setup |

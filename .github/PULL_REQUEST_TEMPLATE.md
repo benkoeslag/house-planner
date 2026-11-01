@@ -12,6 +12,8 @@ Closes #
 
 If no issue exists, link the entry in `docs/work-record.md` and explain why.
 
+Execution plan: `docs/execution/` (write `Small request` if none)
+
 ## Changes made
 
 - 
@@ -36,6 +38,7 @@ Describe migrations, configuration, secrets, permissions, deployment, monitoring
 
 - [ ] Work is on a dedicated branch, not `main`.
 - [ ] The issue or bootstrap work record is linked.
+- [ ] The execution plan is complete, or this is a small request.
 - [ ] Acceptance criteria and relevant failure paths were checked.
 - [ ] Applicable tests, build, lint, and documentation checks pass.
 - [ ] Permissions, security, privacy, and audit effects were reviewed.

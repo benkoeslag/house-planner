@@ -20,14 +20,19 @@ For small changes, Review and Testing may happen together. Never close work mere
 1. Create or select an issue where practical.
 2. Update the local `main` review checkout.
 3. Create a dedicated branch/worktree.
-4. Implement and run applicable checks.
-5. Push the branch and open or update a PR.
-6. A different agent or the human owner reviews and leaves comments.
-7. The implementing agent responds and pushes follow-up commits.
-8. CI passes and conversations are resolved.
-9. Only the human repository owner decides whether to merge.
+4. Write the execution plan (`docs/execution/`), push it, and open a draft PR. Small requests skip the plan.
+5. Implement in small steps. Tick off the plan and push after each one, so another agent can take over at any point.
+6. Run applicable checks, complete the plan, fill in the PR description, and mark the PR ready for review.
+7. A different agent or the human owner reviews and leaves comments.
+8. The implementing agent responds and pushes follow-up commits.
+9. CI passes and conversations are resolved.
+10. Only the human repository owner decides whether to merge.
 
 Agents never push to `main`, merge PRs, bypass protections, or delete protected branches.
+
+## Handoffs between agents
+
+When a session ends partway through a task, start the next agent with "pick up" and the task's issue, branch, or draft PR. The agent reads the task's execution plan, checks it against the branch, and continues from its "Next action". See [`execution/README.md`](execution/README.md).
 
 ## Labels and Project fields
 
