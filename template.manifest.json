@@ -24,6 +24,8 @@
     "decisions/README.md",
     "docs/architecture.md",
     "docs/data-model.md",
+    "docs/execution/PLAN-TEMPLATE.md",
+    "docs/execution/README.md",
     "docs/github-workflow.md",
     "docs/integrations.md",
     "docs/local-development.md",

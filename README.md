@@ -48,6 +48,7 @@ The owner's existing SketchUp model is not imported; the house will be redrawn i
 | `.github/PULL_REQUEST_TEMPLATE.md` | Review and validation record |
 | `.github/workflows/template-quality.yml` | Offline-safe scaffold validation in CI |
 | `docs/` | Product, architecture, security, workflow, and local-development documentation |
+| `docs/execution/` | Live execution plans, so any agent can pick up a task where the last one stopped |
 | `decisions/` | Architecture Decision Records |
 | `config/` | Standard labels and GitHub Project specification |
 | `scripts/` | Local validation, export, and label setup |

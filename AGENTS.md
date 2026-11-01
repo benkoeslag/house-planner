@@ -13,6 +13,7 @@ Distinguish implemented behavior, accepted decisions, proposals, and unknowns. M
 3. Review the associated GitHub issue and its acceptance criteria when one exists.
 4. Inspect current files and preserve unrelated work.
 5. Confirm that the current branch is a dedicated task branch, never `main`.
+6. Look for an existing execution plan (`docs/execution/`) or draft pull request for the task. If one exists, pick it up as described in [Execution plans](#execution-plans) instead of starting over.
 
 ## Git and GitHub rules
 
@@ -25,7 +26,7 @@ Distinguish implemented behavior, accepted decisions, proposals, and unknowns. M
 - Work on a dedicated branch for each task.
 - Link substantive work to a GitHub issue where practical. During bootstrap, record an explicit owner request in `docs/work-record.md` and reconcile it with GitHub later if useful.
 - Run applicable tests, build, lint, and documentation checks before considering work complete.
-- Push completed work and create or update a pull request.
+- Except for small requests, push the execution plan and open a **draft** pull request as soon as the task starts, push work often, and mark the pull request ready for review when the task is complete. A small request pushes its finished work and opens a pull request.
 - In the PR, explain what changed, why, validation performed, risks, and remaining work.
 - Agents may review other agents' pull requests and leave inline or general review comments.
 - Agents may respond to review comments and push follow-up commits to their own task branch.
@@ -93,6 +94,19 @@ Omit the review line when no review is recommended.
 
 Each vendor's agents maintain their own vendor's column in [`docs/model-roster.md`](docs/model-roster.md): Claude agents the Claude column, ChatGPT/Codex agents the ChatGPT/Codex column. Before recommending models, check your own column. If it is `TBD`, more than 90 days past its review date, or names a model you know has been replaced, still make the recommendation, note that the roster may be stale, and propose an update in a small, separate pull request that cites your source. Never invent model names; leave unsure entries `TBD` and ask the owner to confirm them from the model picker. Never edit another vendor's column.
 
+## Execution plans
+
+A session can end without warning when it runs out of credits, hits a context limit, or the owner switches agents. Every task except a small request keeps a live execution plan, so any agent can resume it without repeating work. The full protocol is in [`docs/execution/README.md`](docs/execution/README.md), and the template is [`docs/execution/PLAN-TEMPLATE.md`](docs/execution/PLAN-TEMPLATE.md).
+
+- **Plan first.** Before changing anything else:
+  - Write `docs/execution/<task-id>-<short-slug>.md` on the task branch, with numbered steps of about 15 minutes each and a "Next action".
+  - Push it and open a draft pull request.
+- **Tick off as you go.** Mark steps `[~]` when started and `[x]` when done, with the commit. Rewrite "Next action" so another agent can start from that line alone. Commit and push the plan with the work.
+- **Push often.** Never leave more than about 15 minutes of work unpushed, and push before anything long or risky.
+- **Record what saves repeat effort:** decisions made while working, approaches that failed, checks run, and questions for the owner.
+- **Picking up.** Read the plan, then check it against the branch and the checks. Note the handoff in the plan's log, and continue from "Next action". Do not redo steps that check out as done.
+- **Finishing.** Complete the plan, fill in the pull request description, and mark the pull request ready for review.
+
 ## Review workflow
 
 One agent may implement while another reviews. Reviewers should examine the issue, diff, validation evidence, permissions, failure paths, tests, and documentation. Leave specific, actionable comments. The implementing agent should respond, push fixes to the same branch, and summarize how each material comment was addressed.
@@ -111,7 +125,7 @@ Approval from an agent is advisory. It never authorizes a merge.
 
 ## Completion
 
-Before handing off, ensure the branch is pushed and its PR is current. Report:
+Before handing off, ensure the branch is pushed, its execution plan is current, and its PR is current. Report:
 
 - what changed and why;
 - checks run and their results;
