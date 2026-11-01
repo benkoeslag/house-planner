@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import fixtures from './fixtures/prototype-cabinets.json';
 import { buildCabinet } from '../src/cabinets/build';
+import { bandInches, buildCutList } from '../src/cabinets/cutlist';
 import { cabinetSettings, DEFAULT_CABINET_SETTINGS, type CabinetSettings } from '../src/cabinets/settings';
 import type { CabinetInput } from '../src/cabinets/types';
 
@@ -32,6 +33,18 @@ describe('cabinet engine matches the prototype', () => {
       const settings = cabinetSettings((k as { settings?: Partial<CabinetSettings> }).settings);
       const got = buildCabinet(k.input as CabinetInput, settings, 'X1');
       expect(settle(got)).toEqual(settle(k.expected));
+    });
+  }
+});
+
+describe('cut list matches the prototype for the starter kitchen', () => {
+  for (const k of fixtures.cutlists) {
+    it(k.name, () => {
+      const settings = cabinetSettings((k as { settings?: Partial<CabinetSettings> }).settings);
+      const parts = fixtures.starter.flatMap(([id, input]) => buildCabinet(input as CabinetInput, settings, id as string).parts);
+      const groups = buildCutList(parts, settings, (k as { grainFree?: string[] }).grainFree ?? []);
+      expect(settle(groups)).toEqual(settle(k.groups));
+      expect(bandInches(groups)).toBeCloseTo(k.bandInches, 9);
     });
   }
 });

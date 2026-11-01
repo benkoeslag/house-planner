@@ -31,18 +31,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 3. [x] `src/cabinets/settings.ts` (defaults from the prototype's `DEF`) and `src/cabinets/types.ts` (cabinet inputs, parts, fronts, hardware, warnings)
 4. [x] `src/cabinets/build.ts`: boxes, doors, drawers, shelves, and the three base layouts
 5. [x] `src/cabinets/build.ts`: blind base, blind upper, diagonal upper, gables, tall, open shelf, open spaces, custom parts
-6. [~] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
-7. [~] Tests: golden comparison with the fixtures, worked examples, and cut list behavior
-8. [ ] Docs (architecture, cabinet rules, review queue R-017, work record, roadmap), checks, PR description, mark ready
+6. [x] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
+7. [x] Tests: golden comparison with the fixtures, worked examples, and cut list behavior
+8. [~] Docs (architecture, cabinet rules, review queue R-017, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 6: write `src/cabinets/cutlist.ts`, porting `finalize` without `nest` (prototype lines 772–801), plus `KIND_ORDER`, `MAT_ORDER` and `HIDDEN_PARTS`.
+Step 8:
 
-- `buildCutList(parts, settings, grainFree)` returns groups numbered from 1. Grain is `rot || (box && rotBox) || grainFree has grainKey`.
-- Banding length = Σ (l·L + w·W + x)·qty.
-- Hardware totals sum `hw` across cabinets, with slides keyed by length.
-- Then add a cut list golden test against `fixtures.cutlists`, built from `fixtures.starter`.
+- `docs/architecture.md`: add a cabinet engine section.
+- `docs/cabinet-rules.md` status: mention the engine and the tests.
+- `docs/review-queue.md`: add R-017 with the package 2 challenge.
+- `docs/work-record.md`: add BOOT-009.
+- `docs/roadmap.md`: package 2 done, waiting for merge.
+- `AGENTS.md` checks table: note the fixture generator.
+- Then run all checks, fill in the PR #9 description, and mark it ready.
 
 ## Decisions made while working
 
@@ -54,12 +57,15 @@ Step 6: write `src/cabinets/cutlist.ts`, porting `finalize` without `nest` (prot
 
 ## Tried and did not work
 
+- Two of my own test expectations were wrong; the engine was right in both, matching the prototype. First, a drawer count of 0 becomes 1, not 3 (`parseInt('0') || 1`). Second, "ignore grain on hidden parts" re-ticks a line already ticked. The tests now pin the prototype's behavior.
+
 - The generator needs Playwright from the global install: `NODE_PATH=$(npm root -g) node scripts/prototype-fixtures.mjs` in this environment.
 
 ## Checks run
 
 - Fixture generator ran: 91 cabinet cases and 4 cut lists, from the unchanged prototype. The starter cut list has 85 groups and 4027.10 in of banding.
 - `tests/cabinets-golden.test.ts`: 92 pass. All 91 prototype cases match to 1e-9, including warning text, plus the settings defaults. A deliberate mutation (hinge threshold, drawer box rounding) made them fail, so the test does catch differences. Reverted.
+- Cut list golden tests: all 4 starter kitchen cut lists match (default, `rotBox`, 1/16″ rounding, two ticked lines). `tests/cabinets.test.ts` pins the worked examples and cut list behavior. Full run: 14 files, 249 tests pass. Typecheck and build pass.
 
 ## Open questions for the owner
 
