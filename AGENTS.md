@@ -145,3 +145,4 @@ Add any new check (such as lint) to this table in the same pull request that int
 - Measurements are in inches throughout, shown to the owner as fractions (for example `23 5/8`).
 - Cut sizes, cabinet sizes, and layout positions are used to cut real material. Changes to that math need automated tests that pin the expected numbers.
 - Additional high-risk areas for the small-request test and review recommendations: cabinet and cut-size math, sheet layout and optimizer results, and the saved project file format.
+- **Review queue.** The owner merges packages as they finish and runs one large independent review later. Every pull request adds what a reviewer should check to [`docs/review-queue.md`](docs/review-queue.md), and adds choices only the owner can make to its Owner decisions section. Do not remove rows; reviewers record results in them.
