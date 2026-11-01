@@ -4,7 +4,7 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Go ahead with package 2". This is the cabinet engine: parts, hardware and the cut list, with golden tests from the prototype (see `docs/roadmap.md`, `docs/cabinet-rules.md`). Work record BOOT-009. |
 | Branch | `agent/claude/m2-cabinet-engine` |
-| Pull request | to be linked (draft) |
+| Pull request | #9 (draft) |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
 | Status | In progress |
 
@@ -26,9 +26,9 @@
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped
 
-1. [~] Create this plan, push it, and open a draft PR
-2. [ ] Fixture generator: `scripts/prototype-fixtures.mjs` loads the unchanged prototype in headless Chromium and records `buildCab` output for a list of cases, plus a cut list. Commit the generated `tests/fixtures/prototype-cabinets.json`.
-3. [ ] `src/cabinets/settings.ts` (defaults from the prototype's `DEF`) and `src/cabinets/types.ts` (cabinet inputs, parts, fronts, hardware, warnings)
+1. [x] Create this plan, push it, and open a draft PR (#9)
+2. [x] Fixture generator: `scripts/prototype-fixtures.mjs` loads the unchanged prototype in headless Chromium and records `buildCab` output for a list of cases, plus a cut list. Commit the generated `tests/fixtures/prototype-cabinets.json`.
+3. [~] `src/cabinets/settings.ts` (defaults from the prototype's `DEF`) and `src/cabinets/types.ts` (cabinet inputs, parts, fronts, hardware, warnings)
 4. [ ] `src/cabinets/build.ts`: boxes, doors, drawers, shelves, and the three base layouts
 5. [ ] `src/cabinets/build.ts`: blind base, blind upper, diagonal upper, gables, tall, open shelf, open spaces, custom parts
 6. [ ] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
@@ -37,7 +37,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 1: commit and push this file on `agent/claude/m2-cabinet-engine`, then open the draft PR.
+Step 3: write `src/cabinets/settings.ts` and `src/cabinets/types.ts`.
+
+- Setting keys are the prototype's `DEF` keys, except that `slideLens` becomes `slideLengths: number[]` and the room keys (`leftLen` and so on) and `grainFree` are left out.
+- Engine input field names are listed in `scripts/prototype-fixtures.mjs` → `toProto()`, which is the mapping to the prototype's text fields.
+- `tests/fixtures/prototype-cabinets.json` → `defaults` holds the prototype's `DEF` for checking.
 
 ## Decisions made while working
 
@@ -47,11 +51,11 @@ Step 1: commit and push this file on `agent/claude/m2-cabinet-engine`, then open
 
 ## Tried and did not work
 
-None yet.
+- The generator needs Playwright from the global install: `NODE_PATH=$(npm root -g) node scripts/prototype-fixtures.mjs` in this environment.
 
 ## Checks run
 
-None yet.
+- Fixture generator ran: 91 cabinet cases and 4 cut lists, from the unchanged prototype. The starter cut list has 85 groups and 4027.10 in of banding.
 
 ## Open questions for the owner
 
