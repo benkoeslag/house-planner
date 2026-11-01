@@ -4,7 +4,7 @@
 | --- | --- |
 | Task | Owner request, 2026-11-01: keep a running execution plan, crossed off as work happens, so another agent can pick up where a session that ran out of credits left off. Add it to the governance here and in `project-template`. Work record BOOT-008. |
 | Branch | `agent/claude/execution-plans`. It starts from `agent/claude/m2-prototype-spec` (#7) to avoid a work-record conflict, so merge #7 first. |
-| Pull requests | house-planner: draft, to be linked. project-template: to be linked. |
+| Pull requests | house-planner: #8 (draft). project-template: branch `agent/claude/execution-plans` pushed, PR to be opened. |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
 | Status | In progress |
 
@@ -20,9 +20,9 @@ Every task that isn't a small request has a plan file on its branch. The file is
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped
 
-1. [x] Create this plan, push it, and open a draft PR in house-planner
-2. [ ] project-template: add `docs/execution/README.md` (the protocol) and `docs/execution/PLAN-TEMPLATE.md`
-3. [ ] project-template: AGENTS.md (before working, Git rules, the new section, completion), the PR template, `docs/github-workflow.md`, the manifest, README
+1. [x] Create this plan, push it, and open a draft PR in house-planner (#8)
+2. [x] project-template: add `docs/execution/README.md` (the protocol) and `docs/execution/PLAN-TEMPLATE.md` (project-template `3e19f39`)
+3. [~] project-template: AGENTS.md (before working, Git rules, the new section, completion), the PR template, `docs/github-workflow.md`, the manifest, README
 4. [ ] project-template: run the checks (Python copy of Test-Template), commit, push, open the PR
 5. [ ] house-planner: bring over the same files and rules, then update the work record (BOOT-008) and the review queue
 6. [ ] house-planner: run the checks (template check, typecheck, tests, build), commit and push
@@ -30,7 +30,15 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 2: write `docs/execution/README.md` and `docs/execution/PLAN-TEMPLATE.md` in `/home/user/project-template`, on a new branch `agent/claude/execution-plans` from `origin/main`.
+Step 3, in `/home/user/project-template` on branch `agent/claude/execution-plans`:
+
+- Add an "Execution plans" section to AGENTS.md.
+- Change "Push completed work and create or update a pull request" to the draft-PR flow.
+- Add a plan check to "Before working" and to "Completion".
+- Add a plan line and a checklist item to the PR template.
+- Update the lifecycle in `docs/github-workflow.md`.
+- Add both new files to `template.manifest.json`.
+- Add `docs/execution/` to the README map.
 
 ## Decisions made while working
 
