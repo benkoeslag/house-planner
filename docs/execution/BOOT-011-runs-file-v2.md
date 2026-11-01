@@ -33,13 +33,13 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 1. [x] Create this plan, push it, and open a draft PR (#11)
 2. [x] `src/cabinets/project.ts`: saved types (`CabinetRun`, `CabinetCorner`, `CabinetItem` with position and snap, `CabinetsData`), `emptyCabinets()`, and display labels (B1, U1… in list order, as the prototype). Add the `stove` open-space kind to `build.ts`. Tests.
-3. [~] `src/cabinets/runs.ts`: run geometry from the plan:
+3. [x] `src/cabinets/runs.ts`: run geometry from the plan:
    - the collinear chain through the run's walls
    - face start and end points, direction, the normal into the room, and whether positions increase to the right as faced
    - usable length
    - openings mapped to run positions
    Tests.
-4. [ ] `src/cabinets/corners.ts`: inside corners where two runs start at the same face corner, with the owner run. Tests.
+4. [~] `src/cabinets/corners.ts`: inside corners where two runs start at the same face corner, with the owner run. Tests.
 5. [ ] Fixture generator: `tests/fixtures/prototype-layout.json`, with about 10 room and layout scenarios run through the prototype's `layoutWalls`, `renderWall` (countertop) and `addToeKick`. Each scenario is written in a neutral form the test can turn into a plan.
 6. [ ] `src/cabinets/layout.ts`: port `layoutWalls` per run (row starts per corner, openings and stove blocks, fixed modes, flow, snapping, gaps, checks, sink and fridge checks)
 7. [ ] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
@@ -55,15 +55,12 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 3: write `src/cabinets/runs.ts`, `runGeometry(plan, run, geometry = wallGeometry(plan))`.
+Step 4: write `src/cabinets/corners.ts`.
 
-1. Chain: from `wallIds[0]`, extend both ways through walls that share an endpoint, are collinear and have the same thickness. Stop where any other wall at the joint points to the run's face side (`dot(dir, normal) > 0`).
-2. Face line: the first wall's centerline offset by thickness / 2 toward the face side (`perpLeft(u)` for left).
-3. Start and end: the extreme face points along the chain, from the face spans in `WallGeometry.faces` (`along` values, converted to points on the face line). If `from` is `b`, reverse the direction.
-4. `rightward`: `dot(u, (-n.y, n.x)) > 0`, where `n` is the face normal into the room.
-5. Openings: map each opening on a chain wall to `[t1, t2]` along the run, and keep its kind and sill.
+- `findCorners(runGeometries)` gives pairs of ok runs whose origins coincide (`samePoint`) and form an inside corner: each run's direction points into the other's room side, `dot(u2, n1) > 0` and `dot(u1, n2) > 0`.
+- `resolveCorners(data.corners, found)`: a saved corner keeps its owner when its two runs still form a corner. A new pair gets a corner with no stored owner, and the default owner is the rightward run (the prototype's default, the right wall). Saved corners whose runs no longer meet are reported.
 
-Tests use an L of two walls (thickness 4.5) with the inside corner at (0,0), plus a split wall and a T on each side.
+Tests use the L from `tests/cabinets-runs.test.ts`, plus an outside corner and two runs that meet at their far ends (not a corner, since corners are at starts only).
 
 ## Decisions made while working
 
@@ -86,6 +83,7 @@ None yet.
 
 ## Checks run
 
+- Step 3: `tests/cabinets-runs.test.ts` passes 7 tests: an L measured from the inside corner, `from: b`, openings mapped, a split wall with a backward second piece, walls meeting the back or the face, unsplit T, thickness change, and missing walls. One fix was in my test data: a T has to end on the other wall's centerline.
 - Step 2: typecheck passes. The project and golden suites pass (99): labels match the prototype's numbering, and the stove space is 30 wide with 30 1/4 on the wall and 36 tall.
 
 ## Open questions for the owner
