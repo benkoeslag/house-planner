@@ -14,4 +14,4 @@ Use the project's documented decision authority. Routine choices within an autho
 | --- | --- | --- |
 | [ADR-001](ADR-001-application-stack.md) | Application stack | Accepted |
 | [ADR-002](ADR-002-project-file-format.md) | Project file format, version 1 | Accepted |
-| [ADR-003](ADR-003-cabinet-runs-and-file-v2.md) | Cabinet runs on the plan, and project file version 2 | Proposed |
+| [ADR-003](ADR-003-cabinet-runs-and-file-v2.md) | Cabinet runs on the plan, and project file version 2 | Accepted |

@@ -4,7 +4,21 @@ Status: Draft for M2. This document writes out every rule in the cabinet planner
 
 The parts, hardware, cut list, sheet layout, optimizer, cut step, consumables and cost rules are implemented in `src/cabinets/` (packages 2 and 3). They are checked against cases recorded from the prototype itself, down to the money shown on its page; see [`architecture.md`](architecture.md#cabinet-engine).
 
-How the new app places cabinets on the floor plan (runs, corners, openings, the file format) is proposed in [ADR-003](../decisions/ADR-003-cabinet-runs-and-file-v2.md). This document covers what the cabinets are made of and how a row of them is laid out along one wall.
+How the new app places cabinets on the floor plan (runs, corners, openings, the file format) is decided in [ADR-003](../decisions/ADR-003-cabinet-runs-and-file-v2.md). This document covers what the cabinets are made of and how a row of them is laid out along one wall.
+
+### On the plan (package 4)
+
+The wall layout below is the prototype's. In the app it applies to each **run** (a wall face) instead of the prototype's left and right walls:
+
+- **Measuring.** Positions are measured from the run's start corner. "Left" and "right" are as you face the run.
+- **Corners.** A corner is where two runs start at the same inside corner. Its owner plays the part of "corner cabinets belong to".
+- **Windows and doors come from the plan.**
+  - A window blocks the upper row. If its sill is below countertop height, it blocks the base row too, with a warning.
+  - A door or opening blocks both rows.
+  - "Centered on the window" is "centered on an opening".
+- **The stove space is an item** (an open space of kind `stove`). It takes its width plus the countertop overhang on each side, and is placed by its distance from the corner to the start of that overhang (56″ − 1/8″ = 55 7/8″ for the starter kitchen). It behaves exactly like the prototype's stove opening. "Centered on the stove" is "lined up with the stove item, center".
+
+The 12 prototype layouts in `tests/fixtures/prototype-layout.json`, drawn on a real plan, match the prototype exactly.
 
 ## Notation
 

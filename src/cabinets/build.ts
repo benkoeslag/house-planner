@@ -127,11 +127,17 @@ export function buildCabinet(c: CabinetInput, s: CabinetSettings, id: string): B
       return X;
     }
     const kind = c.gapKind ?? 'dw';
-    const row = kind === 'dw' ? 'base' : kind === 'fridge' ? 'full' : kind;
     X.W = W;
-    X.H = row === 'upper' ? s.upperH : row === 'full' ? (kind === 'fridge' ? 70 : s.upperTop) : s.counterH - s.counterT;
     X.ok = true;
     X.gap = true;
+    if (kind === 'stove') {
+      // The cabinets beside a stove sit back by the countertop overhang, so the countertop edges land on the stove space.
+      X.H = s.counterH;
+      X.EW = W + 2 * s.counterOverhang;
+      return X;
+    }
+    const row = kind === 'dw' ? 'base' : kind === 'fridge' ? 'full' : kind;
+    X.H = row === 'upper' ? s.upperH : row === 'full' ? (kind === 'fridge' ? 70 : s.upperTop) : s.counterH - s.counterT;
     return X;
   }
 

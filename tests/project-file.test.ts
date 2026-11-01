@@ -10,10 +10,10 @@ const errorOf = (t: string): string => {
 };
 
 describe('project file', () => {
-  it('writes version 1 in inches', () => {
+  it('writes the current version in inches', () => {
     const doc = sampleDoc();
-    expect(doc).toMatchObject({ format: 'house-planner', version: 1, units: 'in', name: 'Sample room' });
-    expect(FILE_VERSION).toBe(1);
+    expect(doc).toMatchObject({ format: 'house-planner', version: 2, units: 'in', name: 'Sample room' });
+    expect(FILE_VERSION).toBe(2);
   });
 
   it('round-trips a project exactly', () => {
@@ -29,7 +29,7 @@ describe('project file', () => {
   });
 
   it('refuses files from a newer version with a clear message', () => {
-    expect(errorOf(text({ ...sampleDoc(), version: 2 }))).toMatch(/newer version of House Planner/);
+    expect(errorOf(text({ ...sampleDoc(), version: FILE_VERSION + 1 }))).toMatch(/newer version of House Planner/);
   });
 
   it('explains bad values with where they are', () => {

@@ -38,7 +38,8 @@ export const UPPER_TYPES: ReadonlySet<CabinetType> = new Set(['upper', 'upper-di
 export type DoorMode = 'auto' | 'none' | 'left' | 'right' | 'pair';
 export type Material = 'box' | 'back' | 'drw';
 export type BandCode = 'none' | '1L' | '2L' | '1L1W' | 'all';
-export type GapKind = 'dw' | 'fridge' | 'base' | 'upper' | 'full';
+/** `stove` is a stove space: it takes its width plus the countertop overhang on each side (not in the prototype's list; see docs/cabinet-rules.md). */
+export type GapKind = 'dw' | 'fridge' | 'base' | 'upper' | 'full' | 'stove';
 export type BlindTop = 'drawer' | 'false' | 'none';
 
 /**
