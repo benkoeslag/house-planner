@@ -2,9 +2,18 @@
 // the prototype. Fixtures: tests/fixtures/prototype-sheets.json (scripts/prototype-fixtures.mjs).
 import { describe, expect, it } from 'vitest';
 import fixtures from './fixtures/prototype-sheets.json';
+import cabinetFixtures from './fixtures/prototype-cabinets.json';
 import { settle } from './helpers';
 import {
   acceptOptimized,
+  buildCabinet,
+  consumables,
+  costLines,
+  countText,
+  materialCounts,
+  money,
+  packsText,
+  plywoodCost,
   areaLowerBound,
   buildCutList,
   cutSteps,
@@ -18,7 +27,9 @@ import {
   optimizerJobs,
   quickLayouts,
   toSheetLayouts,
+  type CabinetInput,
   type CabinetSettings,
+  type CabinetType,
   type CutGroup,
   type Material,
   type OptimizerJob,
@@ -196,5 +207,58 @@ describe('cut steps match the prototype', () => {
       '   Crosscut 30 7/8″: #58 Blind panel 30 7/8 × 27 17/32',
       '   Crosscut 34 1/2″, rip to 24 23/32″ wide: #64 Dishwasher end panel 34 1/2 × 24 23/32',
     ]);
+  });
+});
+
+describe('consumables, counts and costs match the prototype', () => {
+  for (const sc of fixtures.scenarios as Scenario[]) {
+    it(sc.name, () => {
+      const s = settingsOf(sc);
+      const placed = new Map(sc.consumablesInput.cabinets.map((c) => [c.id, c]));
+      const cabinets = cabinetFixtures.starter.map(([id, input]) => {
+        const p = placed.get(id as string)!;
+        return { type: p.type as CabinetType, built: buildCabinet(input as CabinetInput, s, id as string), placed: p.placed };
+      });
+      const parts = [...cabinets.flatMap((c) => c.built.parts), ...(sc.consumablesInput.kickParts as Part[])];
+      const groups = buildCutList(parts, s);
+      expect(groups.map((g) => ({ num: g.num, name: g.name, mat: g.mat, L: g.L, W: g.W, qty: g.qty, rot: g.rot }))).toEqual(sc.groups);
+
+      const cons = consumables({ parts, cabinets, platformRuns: sc.consumablesInput.platformRuns }, s);
+      expect(cons).toEqual(sc.consumables);
+
+      const { nests } = quickLayouts(groups, s);
+      const layoutSheets = Object.fromEntries(Object.entries(nests).map(([m, n]) => [m, n!.sheets.length]));
+      const ply = plywoodCost(layoutSheets, s);
+      expect(ply).toEqual(sc.plyCost);
+      const counts = materialCounts({ plywood: ply, groups, cabinets: cabinets.map((c) => c.built), consumables: cons });
+      expect(counts).toEqual(sc.counts);
+    });
+  }
+
+  it('the money on the prototype page, line by line', () => {
+    const sc = fixtures.scenarios[0]!;
+    const s = cabinetSettings();
+    const cost = costLines(sc.counts, s);
+    for (const c of cost.lines) {
+      const page = (fixtures.page.lines as Record<string, (typeof fixtures.page.lines)['box']>)[c.line.key]!;
+      expect({ count: countText(c), packs: packsText(c), subtotal: money(c.subtotal), tax: money(c.tax), total: money(c.total), hidden: c.hidden }).toEqual(page);
+    }
+    expect([money(cost.subtotal), money(cost.tax), money(cost.total)]).toEqual([fixtures.page.subtotal, fixtures.page.tax, fixtures.page.total]);
+    expect(money(cost.total)).toBe('$3,178.46');
+  });
+
+  it('prices with cents, packs and tax', () => {
+    const s = cabinetSettings({ pricePS: 9.99, taxRate: 13 });
+    const c = costLines({ ps: 291 }, s).lines.find((l) => l.line.key === 'ps')!;
+    expect([c.packs, money(c.subtotal), money(c.tax), money(c.total)]).toEqual([3, '$29.97', '$3.90', '$33.87']);
+    expect(money(1234.5)).toBe('$1,234.50');
+  });
+
+  it('nothing to build costs only the lump sum', () => {
+    const s = cabinetSettings();
+    const cons = consumables({ parts: [], cabinets: [], platformRuns: [] }, s);
+    expect(Object.values(cons).every((v) => v.n === 0)).toBe(true);
+    const counts = materialCounts({ plywood: plywoodCost({}, s), groups: [], cabinets: [], consumables: cons });
+    expect(costLines(counts, s).subtotal).toBe(40);
   });
 });
