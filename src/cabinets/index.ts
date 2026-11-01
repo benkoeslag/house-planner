@@ -5,3 +5,4 @@ export * from './cutlist';
 export { fmt, roundCut } from './format';
 export * from './sheets';
 export * from './optimizer';
+export * from './cutsteps';

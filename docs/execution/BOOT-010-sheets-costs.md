@@ -47,18 +47,25 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
    - cut step text for each sheet
 3. [x] `src/cabinets/sheets.ts`: material info, quick layout, warnings for parts that don't fit, plus a golden test
 4. [x] `src/cabinets/optimizer.ts`: both packers, the scoring, the fixed-seed tries, the time or try budget, the signature, the acceptance rule and the area lower bound, plus a golden test
-5. [~] `src/cabinets/cutsteps.ts`: strips, crosscuts, rips and leftovers as data, plus a golden test against the prototype's text
-6. [ ] `src/cabinets/costs.ts`: consumables, plywood sheets with spares, material counts, cost lines with tax, and money formatting, plus a golden test against the page's numbers
+5. [x] `src/cabinets/cutsteps.ts`: strips, crosscuts, rips and leftovers as data, plus a golden test against the prototype's text
+6. [~] `src/cabinets/costs.ts`: consumables, plywood sheets with spares, material counts, cost lines with tax, and money formatting, plus a golden test against the page's numbers
 7. [ ] Docs (architecture, cabinet rules status, review queue R-018, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 5: write `src/cabinets/cutsteps.ts`, porting `cutPlanHtml` (prototype lines 1813–1849) as data:
+Step 6: write `src/cabinets/costs.ts`, porting:
 
-- strips (heading width), lines (single crosscut with repeat count, rip and trim, or "crosscut then rip into N" with rip groups), strip leftovers over 2″, and the edge leftover over 2″
-- a text renderer for the test that mirrors the fixture's line format (`S `/`C `/`R `/`O `/`E `), built from the page's `textContent`
+- `consumables` (prototype lines 899–943). Inputs: all parts including the toe kick strips, the cabinets with type and "placed on a wall", and the platform run lengths.
+- `plyCost` (lines 854–861), with the sheet counts from the layout in use
+- `MATS_UI` → `MATERIAL_LINES` (lines 863–886)
+- `matCounts` (lines 944–951)
+- the cost loop in `renderStats` (lines 959–975)
+- `money` (line 952)
 
-Golden test: `scenarios[*].quick[mat].steps` and `optimized[mat].steps`, plus `synthetic.steps`. Names come from the cut list groups (num → name).
+Golden test:
+
+- Build the starter cabinets with the engine from `prototype-cabinets.json` → `starter`, and add `consumablesInput.kickParts`. Check that the cut list equals `scenarios[0].groups`.
+- Then compare consumables, counts and plyCost with the fixture, and the money strings with `page`.
 
 ## Decisions made while working
 
@@ -72,6 +79,7 @@ Golden test: `scenarios[*].quick[mat].steps` and `optimized[mat].steps`, plus `s
 ## Checks run
 
 - Generator ran. `prototype-cabinets.json` came out byte-identical, so it is deterministic. `prototype-sheets.json` holds 3 starter scenarios (defaults, `rotBox`, kerf 3/16 with trim 1/4) and the synthetic cases. Quick sheets are 11/4/2, the optimizer ran 41 tries in every material, plywood is $1,710, and the page total is $3,178.46.
+- Cut step golden tests: every quick and optimized sheet in 3 scenarios, plus the synthetic case, matches the prototype page's text line for line. 35 tests in the sheets suite pass.
 - Optimizer golden tests: 9 pass. Every scenario and material matches the prototype's raw layouts and accepted sheets after 41 tries, plus signatures and jobs. Behavior tests check repeatability, the time budget and progress, and that every part is placed once, inside the sheet, with no overlaps and grain respected. They also check the acceptance rule and the lower bound. A mutation check (changing the seed) failed the 3 cases where the random try won.
 - Quick layout golden tests: 10 pass (3 scenarios × 3 materials, plus the synthetic case with its "does not fit" warnings).
 
