@@ -101,7 +101,17 @@ svg.plan { width: 100%; height: 100%; display: block; touch-action: none; user-s
 .bar label { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
 .hint { color: var(--muted); }
 .bar-message { color: var(--bad); font-weight: 500; }
-.in { font: inherit; padding: 5px 8px; border: 1px solid #aebac0; border-radius: 5px; background: #fff; width: 13em; font-variant-numeric: tabular-nums; }
+.in { font: inherit; padding: 5px 8px; border: 1px solid #aebac0; border-radius: 5px; background: #fff; color: var(--ink); width: 13em; font-variant-numeric: tabular-nums; }
+/* Form controls set their own text colors, so a browser's dark mode, an extension or a theme cannot
+   turn the typed text the same color as the box. */
+input, select, textarea {
+  color: var(--ink);
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  opacity: 1;
+  color-scheme: light;
+}
+.in::placeholder { color: #6b7880; -webkit-text-fill-color: #6b7880; opacity: 1; }
 .in.short { width: 6em; }
 select.in { width: auto; }
 

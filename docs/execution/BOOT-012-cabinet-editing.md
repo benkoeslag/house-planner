@@ -75,6 +75,8 @@ None. Waiting for the owner to merge #12. Package 6 (cabinets in 3D) waits for t
 
 ## Tried and did not work
 
+- **Owner bug report after the PR was ready:** text typed into any text box is not visible. Typed into the project name, run name, cabinet name and width boxes in headless Chromium in light, dark, forced-dark and forced-colors modes: the text is visible in all of them, so it is **not reproduced**. Added explicit text colors to every form control as a precaution (`src/style.css`). Asked the owner for browser, device and what exactly they see.
+
 - The first flow script read the autosave before its half-second delay and saw nothing; adding a wait fixed it. A JSON-text comparison after reopening differed only by key order; a structural comparison is equal.
 
 None yet.
