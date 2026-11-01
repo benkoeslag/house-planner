@@ -13,7 +13,7 @@ Status: Draft. Dates require an explicit owner commitment. Milestones after M0 f
 
 ## Current work
 
-M1, in five packages: (1) project skeleton and stack decision (done), (2) plan data model and geometry (done), (3) simple 3D viewer (done), (4) floor plan editor (in progress), (5) save, open and autosave.
+M1, in five packages: (1) project skeleton and stack decision (done), (2) plan data model and geometry (done), (3) simple 3D viewer (done), (4) floor plan editor (done), (5) save, open and autosave (in progress). Next: M2, cabinets on the plan.
 
 ## Definition of done
 

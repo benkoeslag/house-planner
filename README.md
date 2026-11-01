@@ -6,7 +6,7 @@ The project is developed by the owner and multiple coding agents, primarily Clau
 
 ## Status
 
-Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress. The app has the floor plan editor next to the 3D view; saving and opening files is the last M1 package, so a reload currently starts again from the sample room.
+Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress. The app has the floor plan editor next to the 3D view, with file save and open and automatic saving in the browser.
 
 What the owner has decided so far is recorded in [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md). The application stack is a TypeScript browser app (Vite, three.js, Vitest); see [`docs/architecture.md`](docs/architecture.md).
 
@@ -24,6 +24,7 @@ The owner's existing SketchUp model is not imported; the house will be redrawn i
 - **Edit:** with **Select**, click a wall to change its length (walls joined at its far end follow), thickness or height. Drag a corner to move it. Delete removes the selection.
 - **Doors, windows, openings:** pick the tool and click on a wall, then type the distance from the inside corner, width, height and sill. Problems (into a corner, overlapping, too tall) show in red.
 - **Rooms** are found automatically; use **Room name** and click inside one to name it. Areas are inside the walls.
+- **Saving:** the plan is autosaved in this browser a moment after every change and restored when you come back. **Save file** downloads a `.house-planner.json` file named after the project; keep these as your real backups. **Open file** loads one; if the file is damaged or from a newer version, you get a plain message and nothing changes. Opening a file can be undone.
 - **View:** drag empty space to pan, scroll or pinch to zoom, **Fit** to see everything. Undo and redo with the buttons or Ctrl+Z / Ctrl+Shift+Z. On a phone, switch between Plan and 3D at the top right.
 
 ## Start here

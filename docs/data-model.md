@@ -41,4 +41,9 @@ Rooms are **not stored**. They are found from the walls each time (`detectRooms`
 - Reading (`parseProject`) never throws. It returns the project or a plain-language error that names the bad value's location, for example `plan.walls[1].thickness must be more than 0`.
 - A file from a **newer** version is refused with a message to update the app. An **older** file is upgraded step by step through `MIGRATIONS`, keyed by the version each step upgrades from. Version 1 is the first format, so there are no migrations yet.
 - Any change to the saved shape must bump `FILE_VERSION`, add a migration from the previous version, and add a test that opens a file in the old format.
-- There is no server and no database. Backups are the owner's saved files; browser autosave arrives in M1 package 5.
+- There is no server and no database. Backups are the owner's saved files.
+- **Autosave** (`src/storage.ts`): the project is written to browser storage under `house-planner:autosave` about half a second after each change, and again when the page is hidden or closed. On start it is read back through `parseProject`, so it gets the same checks and migrations as a file.
+- **An autosave that cannot be read** (damaged, or from a newer version) is never overwritten silently: its text is first copied to `house-planner:autosave-unreadable`, the app starts with the sample room, and says so.
+- **Storage blocked or full:** the app says so and keeps working; **Save file** is the fallback.
+- **Open file** is an undoable change, and undo or redo also restores each plan's project name.
+- Undo history is not saved; it lasts until the page is closed.

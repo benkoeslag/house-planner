@@ -54,3 +54,7 @@ Local Git/VS Code operations are documented in `local-development.md`. Applicati
 | `editor.ts` | Tools, pointer and keyboard handling (mouse, touch and pinch), the typed-length bar, and the properties panel |
 
 The editor tells `main.ts` about every change; `main.ts` rebuilds the 3D view at most once per animation frame. The 2D view keeps its top-left corner still when its size changes, so the plan never shifts under the pointer while drawing.
+
+## Saving
+
+`src/storage.ts` holds the browser-storage logic (autosave, restore, and the backup of an unreadable autosave) behind a small interface so tests can supply a fake. `src/main.ts` runs the autosave timer, **Save file** (downloads `serializeProject` output through a temporary link) and **Open file** (reads the file, runs `parseProject`, and loads it as an undoable change). File format rules are in `docs/data-model.md` and ADR-002.
