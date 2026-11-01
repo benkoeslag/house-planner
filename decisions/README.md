@@ -13,3 +13,4 @@ Use the project's documented decision authority. Routine choices within an autho
 | ADR | Title | Status |
 | --- | --- | --- |
 | [ADR-001](ADR-001-application-stack.md) | Application stack | Accepted |
+| [ADR-002](ADR-002-project-file-format.md) | Project file format, version 1 | Accepted |
