@@ -6,7 +6,9 @@ The project is developed by the owner and multiple coding agents, primarily Clau
 
 ## Status
 
-Milestone M0 (foundation) is done: the governance and workflow from [`benkoeslag/project-template`](https://github.com/benkoeslag/project-template) are in place. Milestone M1 (floor plan editor and 3D viewer) is in progress. The app has the floor plan editor next to the 3D view, with file save and open and automatic saving in the browser.
+Milestones M0 (foundation) and M1 (floor plan editor and 3D viewer) are done. The app has the floor plan editor next to the 3D view, with file save and open and automatic saving in the browser.
+
+Milestone M2 (cabinets on the plan) has started. The cabinet planner prototype is kept unchanged in [`docs/prototype/`](docs/prototype/README.md). All of its rules are written out in [`docs/cabinet-rules.md`](docs/cabinet-rules.md), and [ADR-003](decisions/ADR-003-cabinet-runs-and-file-v2.md) proposes how cabinets will sit on the plan's walls.
 
 What the owner has decided so far is recorded in [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md). The application stack is a TypeScript browser app (Vite, three.js, Vitest); see [`docs/architecture.md`](docs/architecture.md).
 
