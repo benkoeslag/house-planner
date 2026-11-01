@@ -7,3 +7,4 @@ export * from './sheets';
 export * from './optimizer';
 export * from './cutsteps';
 export * from './costs';
+export * from './project';

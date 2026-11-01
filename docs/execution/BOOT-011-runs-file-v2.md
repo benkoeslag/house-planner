@@ -4,7 +4,7 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 4". This implements ADR-003: cabinet runs on wall faces, corners found from the plan, the prototype's wall layout per run, the countertop, toe kick and platform runs, and project file version 2 with a migration from version 1. Work record BOOT-011. |
 | Branch | `agent/claude/m2-runs-file-v2` |
-| Pull request | to be linked (draft) |
+| Pull request | #11 (draft) |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
 | Status | In progress |
 
@@ -31,9 +31,9 @@
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped
 
-1. [~] Create this plan, push it, and open a draft PR
-2. [ ] `src/cabinets/project.ts`: saved types (`CabinetRun`, `CabinetCorner`, `CabinetItem` with position and snap, `CabinetsData`), `emptyCabinets()`, and display labels (B1, U1… in list order, as the prototype). Add the `stove` open-space kind to `build.ts`. Tests.
-3. [ ] `src/cabinets/runs.ts`: run geometry from the plan:
+1. [x] Create this plan, push it, and open a draft PR (#11)
+2. [x] `src/cabinets/project.ts`: saved types (`CabinetRun`, `CabinetCorner`, `CabinetItem` with position and snap, `CabinetsData`), `emptyCabinets()`, and display labels (B1, U1… in list order, as the prototype). Add the `stove` open-space kind to `build.ts`. Tests.
+3. [~] `src/cabinets/runs.ts`: run geometry from the plan:
    - the collinear chain through the run's walls
    - face start and end points, direction, the normal into the room, and whether positions increase to the right as faced
    - usable length
@@ -55,7 +55,15 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 1: commit and push this file on `agent/claude/m2-runs-file-v2`, then open the draft PR.
+Step 3: write `src/cabinets/runs.ts`, `runGeometry(plan, run, geometry = wallGeometry(plan))`.
+
+1. Chain: from `wallIds[0]`, extend both ways through walls that share an endpoint, are collinear and have the same thickness. Stop where any other wall at the joint points to the run's face side (`dot(dir, normal) > 0`).
+2. Face line: the first wall's centerline offset by thickness / 2 toward the face side (`perpLeft(u)` for left).
+3. Start and end: the extreme face points along the chain, from the face spans in `WallGeometry.faces` (`along` values, converted to points on the face line). If `from` is `b`, reverse the direction.
+4. `rightward`: `dot(u, (-n.y, n.x)) > 0`, where `n` is the face normal into the room.
+5. Openings: map each opening on a chain wall to `[t1, t2]` along the run, and keep its kind and sill.
+
+Tests use an L of two walls (thickness 4.5) with the inside corner at (0,0), plus a split wall and a T on each side.
 
 ## Decisions made while working
 
@@ -78,7 +86,7 @@ None yet.
 
 ## Checks run
 
-None yet.
+- Step 2: typecheck passes. The project and golden suites pass (99): labels match the prototype's numbering, and the stove space is 30 wide with 30 1/4 on the wall and 36 tall.
 
 ## Open questions for the owner
 
