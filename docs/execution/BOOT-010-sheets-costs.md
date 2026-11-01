@@ -4,7 +4,7 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 3". This covers sheet layouts, the optimizer, consumables and costs (see `docs/roadmap.md`, `docs/cabinet-rules.md` → Sheet layouts and Materials, counts and cost). Work record BOOT-010. |
 | Branch | `agent/claude/m2-sheets-costs` |
-| Pull request | to be linked (draft) |
+| Pull request | #10 (draft) |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
 | Status | In progress |
 
@@ -39,13 +39,13 @@ This is done when:
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped
 
-1. [~] Create this plan, push it, and open a draft PR
-2. [ ] Extend `scripts/prototype-fixtures.mjs` to write `tests/fixtures/prototype-sheets.json`. It records:
+1. [x] Create this plan, push it, and open a draft PR (#10)
+2. [x] Extend `scripts/prototype-fixtures.mjs` to write `tests/fixtures/prototype-sheets.json`. It records:
    - the starter kitchen's full computation (groups including toe kick, quick sheets, consumables, counts, and the money on the page)
    - synthetic nest cases (rotation, a part too big)
    - optimizer runs with a negative time budget, which gives exactly the 40 fixed tries plus 1 random one and is repeatable
    - cut step text for each sheet
-3. [ ] `src/cabinets/sheets.ts`: material info, quick layout, warnings for parts that don't fit, plus a golden test
+3. [~] `src/cabinets/sheets.ts`: material info, quick layout, warnings for parts that don't fit, plus a golden test
 4. [ ] `src/cabinets/optimizer.ts`: both packers, the scoring, the fixed-seed tries, the time or try budget, the signature, the acceptance rule and the area lower bound, plus a golden test
 5. [ ] `src/cabinets/cutsteps.ts`: strips, crosscuts, rips and leftovers as data, plus a golden test against the prototype's text
 6. [ ] `src/cabinets/costs.ts`: consumables, plywood sheets with spares, material counts, cost lines with tax, and money formatting, plus a golden test against the page's numbers
@@ -53,7 +53,10 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 1: commit and push this file on `agent/claude/m2-sheets-costs`, then open the draft PR.
+Step 3: write `src/cabinets/sheets.ts`, porting `matInfo` and `nest` (prototype lines 803–851) and the "does not fit" warnings from `finalize` (line 799).
+
+- Input: cut groups (`num`, `name`, `L`, `W`, `qty`, `rot`), the material and the settings.
+- Golden test against `tests/fixtures/prototype-sheets.json`: `scenarios[*].quick[mat]`, plus `synthetic`. The synthetic groups are built from parts with `buildCutList`.
 
 ## Decisions made while working
 
@@ -62,11 +65,11 @@ Step 1: commit and push this file on `agent/claude/m2-sheets-costs`, then open t
 
 ## Tried and did not work
 
-None yet.
+- The sheets fixture was 788 KB with indentation, so it is written compact (351 KB).
 
 ## Checks run
 
-None yet.
+- Generator ran. `prototype-cabinets.json` came out byte-identical, so it is deterministic. `prototype-sheets.json` holds 3 starter scenarios (defaults, `rotBox`, kerf 3/16 with trim 1/4) and the synthetic cases. Quick sheets are 11/4/2, the optimizer ran 41 tries in every material, plywood is $1,710, and the page total is $3,178.46.
 
 ## Open questions for the owner
 
