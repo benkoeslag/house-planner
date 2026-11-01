@@ -4,9 +4,9 @@
 | --- | --- |
 | Task | Owner request, 2026-11-01: keep a running execution plan, crossed off as work happens, so another agent can pick up where a session that ran out of credits left off. Add it to the governance here and in `project-template`. Work record BOOT-008. |
 | Branch | `agent/claude/execution-plans`. It starts from `agent/claude/m2-prototype-spec` (#7) to avoid a work-record conflict, so merge #7 first. |
-| Pull requests | house-planner: #8 (draft). project-template: [#5](https://github.com/benkoeslag/project-template/pull/5). |
+| Pull requests | house-planner: #8. project-template: [#5](https://github.com/benkoeslag/project-template/pull/5). |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
-| Status | In progress |
+| Status | Ready for review |
 
 ## Goal and done-when
 
@@ -26,15 +26,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 4. [x] project-template: run the checks (Python copy of Test-Template), commit, push, open the PR (#5)
 5. [x] house-planner: bring over the same files and rules, then update the work record (BOOT-008) and the review queue
 6. [x] house-planner: run the checks (template check, typecheck, tests, build), commit and push
-7. [~] Mark both PRs ready, finish this plan, and report to the owner
+7. [x] Mark both PRs ready, finish this plan, and report to the owner
 
 ## Next action
 
-Step 7:
-
-1. Fill in the PR description for house-planner #8 and mark it ready for review. project-template #5 is already open and ready.
-2. Set this plan's status to "Ready for review".
-3. Report to the owner, including that #7 must merge before #8.
+None. Waiting for the owner to merge #7, then #8 and project-template #5. After that, the owner may run `pwsh -File ./scripts/Test-Template.ps1` once in each repository.
 
 ## Decisions made while working
 
@@ -61,3 +57,4 @@ None.
 | When | Agent | Note |
 | --- | --- | --- |
 | 2026-11-01 | Claude Code (Opus 5.5) | Started |
+| 2026-11-01 | Claude Code (Opus 5.5) | Finished; both PRs ready for review |
