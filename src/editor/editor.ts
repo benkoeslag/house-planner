@@ -6,6 +6,7 @@ import type { OpeningKind, Plan, Point, ProjectSettings } from '../model/types';
 import { formatFeetInches, formatFraction, parseLength } from '../model/units';
 import { wallGeometry, type WallGeometry } from '../model/walls';
 import { planBounds } from '../view3d/pieces';
+import { pruneCabinets, type CabinetsData } from '../cabinets/project';
 import { History } from './history';
 import { hitTest } from './hit';
 import {
@@ -24,6 +25,12 @@ import { draftEnd, snapPoint, type Snap } from './snap';
 
 export type Tool = 'select' | 'wall' | 'door' | 'window' | 'opening' | 'room';
 
+/** What the editor edits and undoes as one: the plan and its cabinets. */
+export interface EditorDoc {
+  plan: Plan;
+  cabinets: CabinetsData;
+}
+
 interface Draft {
   start: Point;
   chainStart: Point;
@@ -35,8 +42,8 @@ export interface EditorHost {
   svg: SVGSVGElement;
   bar: HTMLElement;
   panel: HTMLElement;
-  /** Called after every change with the current plan, for the 3D view. */
-  onPlanChange(plan: Plan): void;
+  /** Called after every change to the plan or the cabinets (for the 3D view and saving). */
+  onChange(doc: EditorDoc): void;
   /** Called when the tool changes, for highlighting toolbar buttons. */
   onToolChange(tool: Tool): void;
   onHistoryChange(canUndo: boolean, canRedo: boolean): void;
@@ -49,7 +56,7 @@ const DRAG_PX = 4;
 const fmt = (n: number): string => formatFraction(n, 16);
 
 export class Editor {
-  readonly history: History;
+  readonly history: History<EditorDoc>;
   settings: ProjectSettings;
   private tool: Tool = 'select';
   private selection: Selection = null;
@@ -60,7 +67,7 @@ export class Editor {
   private hoverSnap?: Snap;
   private message = '';
   private pointers = new Map<number, Point>();
-  private press: { id: number; start: Point; moved: boolean; mode: 'pan' | 'drag-corner' | 'click'; corner?: Point; before?: Plan; viewStart?: View } | null = null;
+  private press: { id: number; start: Point; moved: boolean; mode: 'pan' | 'drag-corner' | 'click'; corner?: Point; before?: EditorDoc; viewStart?: View } | null = null;
   private pinch: { dist: number; mid: Point; view: View } | null = null;
   private ids = randomIds;
   private lastSize: { width: number; height: number } | null = null;
@@ -69,8 +76,9 @@ export class Editor {
     private readonly host: EditorHost,
     plan: Plan,
     settings: ProjectSettings,
+    cabinets: CabinetsData,
   ) {
-    this.history = new History(plan);
+    this.history = new History<EditorDoc>({ plan, cabinets });
     this.settings = { ...settings };
     this.geometry = wallGeometry(plan);
     this.bindEvents();
@@ -80,7 +88,11 @@ export class Editor {
   }
 
   get plan(): Plan {
-    return this.history.plan;
+    return this.history.value.plan;
+  }
+
+  get cabinets(): CabinetsData {
+    return this.history.value.cabinets;
   }
 
   setTool(tool: Tool): void {
@@ -115,11 +127,12 @@ export class Editor {
    * Replaces the plan and settings, for opening a file. This is an ordinary undoable change, so
    * undo brings the previous plan back.
    */
-  load(plan: Plan, settings: ProjectSettings): void {
+  load(plan: Plan, settings: ProjectSettings, cabinets: CabinetsData): void {
     this.settings = { ...settings };
     this.selection = null;
     this.draft = null;
-    this.commit(plan);
+    this.history.push({ plan, cabinets });
+    this.changed(true);
     this.setTool('select');
     this.fit();
     this.host.onSettingsChange?.(this.settings);
@@ -143,8 +156,23 @@ export class Editor {
 
   // ---- changes ---------------------------------------------------------------------------
 
+  /**
+   * Records a plan change. Cabinets on walls that no longer exist are removed in the same undoable
+   * step, and the editor says so.
+   */
   private commit(plan: Plan): void {
-    this.history.push(plan);
+    const { data, removed } = pruneCabinets(plan, this.cabinets);
+    this.history.push({ plan, cabinets: data });
+    if (removed.runs.length) {
+      const n = removed.items.length;
+      this.message = `Removed ${n ? `${n} cabinet${n === 1 ? '' : 's'} and ` : ''}the cabinet run${removed.runs.length === 1 ? '' : 's'} on the deleted wall. Undo brings ${n || removed.runs.length > 1 ? 'them' : 'it'} back.`;
+    }
+    this.changed(true);
+  }
+
+  /** Records a cabinets change. */
+  commitCabinets(cabinets: CabinetsData): void {
+    this.history.push({ plan: this.plan, cabinets });
     this.changed(true);
   }
 
@@ -154,7 +182,7 @@ export class Editor {
     const s = this.selection;
     if (s?.kind === 'wall' && !this.plan.walls.some((w) => w.id === s.id)) this.selection = null;
     if (s?.kind === 'opening' && !this.plan.openings.some((o) => o.id === s.id)) this.selection = null;
-    if (notify) this.host.onPlanChange(this.plan);
+    if (notify) this.host.onChange(this.history.value);
     this.host.onHistoryChange(this.history.canUndo, this.history.canRedo);
     this.renderAll();
   }
@@ -278,7 +306,7 @@ export class Editor {
         corner = hit.point;
       } else if (!hit) mode = 'pan';
     }
-    this.press = { id: e.pointerId, start: p, moved: false, mode, corner, before: this.plan, viewStart: { ...this.view } };
+    this.press = { id: e.pointerId, start: p, moved: false, mode, corner, before: this.history.value, viewStart: { ...this.view } };
   }
 
   private onMove(e: PointerEvent): void {
@@ -307,12 +335,13 @@ export class Editor {
         return;
       }
       if (press.moved && press.mode === 'drag-corner' && press.corner) {
-        const others = { ...press.before!, walls: press.before!.walls.filter((w) => !samePoint(w.a, press.corner!) && !samePoint(w.b, press.corner!)) };
+        const before = press.before!.plan;
+        const others = { ...before, walls: before.walls.filter((w) => !samePoint(w.a, press.corner!) && !samePoint(w.b, press.corner!)) };
         const snap = snapPoint(others, world, PICK_PX / this.view.s);
         this.hoverSnap = snap;
-        this.history.replace(moveEndpoint(press.before!, press.corner, snap.point));
+        this.history.replace({ ...press.before!, plan: moveEndpoint(before, press.corner, snap.point) });
         this.geometry = wallGeometry(this.plan);
-        this.host.onPlanChange(this.plan);
+        this.host.onChange(this.history.value);
         this.render();
         return;
       }
@@ -344,7 +373,7 @@ export class Editor {
       const after = this.plan;
       this.history.replace(press.before!);
       this.hoverSnap = undefined;
-      if (after !== press.before) this.commit(after);
+      if (after !== press.before!.plan) this.commit(after);
       return;
     }
     if (press.moved) return;

@@ -1,16 +1,18 @@
-import type { Plan } from '../model/types';
-
-/** Undo and redo for plans. Plans are never changed in place, so keeping references is enough. */
-export class History {
-  private past: Plan[] = [];
-  private future: Plan[] = [];
+/**
+ * Undo and redo. Values are never changed in place (a change makes a new value), so keeping
+ * references is enough. The editor keeps the plan and the cabinets together in one value, so walls
+ * and cabinets undo as one history.
+ */
+export class History<T> {
+  private past: T[] = [];
+  private future: T[] = [];
 
   constructor(
-    private current: Plan,
+    private current: T,
     private readonly limit = 200,
   ) {}
 
-  get plan(): Plan {
+  get value(): T {
     return this.current;
   }
 
@@ -22,21 +24,21 @@ export class History {
     return this.future.length > 0;
   }
 
-  /** Records a new plan. Clears anything that could have been redone. */
-  push(plan: Plan): void {
-    if (plan === this.current) return;
+  /** Records a new value. Clears anything that could have been redone. */
+  push(value: T): void {
+    if (value === this.current) return;
     this.past.push(this.current);
     if (this.past.length > this.limit) this.past.shift();
-    this.current = plan;
+    this.current = value;
     this.future = [];
   }
 
-  /** Replaces the current plan without an undo step (for example while dragging). */
-  replace(plan: Plan): void {
-    this.current = plan;
+  /** Replaces the current value without an undo step (for example while dragging). */
+  replace(value: T): void {
+    this.current = value;
   }
 
-  undo(): Plan {
+  undo(): T {
     const prev = this.past.pop();
     if (prev) {
       this.future.push(this.current);
@@ -45,7 +47,7 @@ export class History {
     return this.current;
   }
 
-  redo(): Plan {
+  redo(): T {
     const next = this.future.pop();
     if (next) {
       this.past.push(this.current);
@@ -54,10 +56,10 @@ export class History {
     return this.current;
   }
 
-  /** Starts over with a plan and no history. */
-  reset(plan: Plan): void {
+  /** Starts over with a value and no history. */
+  reset(value: T): void {
     this.past = [];
     this.future = [];
-    this.current = plan;
+    this.current = value;
   }
 }

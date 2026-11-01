@@ -2,7 +2,6 @@ import { APP_NAME } from './app';
 import { Editor, type Tool } from './editor/editor';
 import { parseProject, sampleProject, serializeProject } from './model';
 import type { Plan, Project } from './model';
-import type { CabinetsData } from './cabinets/project';
 import { browserStore, fileNameFor, loadAutosave, saveAutosave } from './storage';
 import { PlanView } from './view3d/plan-view';
 import './style.css';
@@ -69,12 +68,6 @@ view.setPlan(project.plan);
 const nameInput = q<HTMLInputElement>('#project-name');
 /** Names of the plans on either side of an Open, so undo and redo restore the right name. */
 const namesByPlan = new WeakMap<Plan, string>();
-/**
- * The project's cabinets. There is no cabinet editing yet (M2 package 5), but they must travel with
- * the plan through save, autosave, open, and undo or redo across an open, so none are ever lost.
- */
-let cabinets: CabinetsData = project.cabinets;
-const cabinetsByPlan = new WeakMap<Plan, CabinetsData>();
 let editorReady = false;
 const statusEl = q<HTMLElement>('#status');
 nameInput.value = project.name;
@@ -87,7 +80,8 @@ if (startNote) say(startNote, restored.status !== 'ok');
 // Autosave: shortly after the last change, and again when the page is hidden or closed.
 let saveTimer = 0;
 let dirtySinceSave = false;
-const current = (): Project => ({ name: nameInput.value.trim() || 'Untitled', settings: { ...editor.settings }, plan: editor.plan, cabinets });
+// The editor keeps the plan and cabinets in one undo history, so they always save together.
+const current = (): Project => ({ name: nameInput.value.trim() || 'Untitled', settings: { ...editor.settings }, plan: editor.plan, cabinets: editor.cabinets });
 function autosaveNow(): void {
   clearTimeout(saveTimer);
   saveTimer = 0;
@@ -114,7 +108,7 @@ const editor = new Editor(
     svg: q<SVGSVGElement>('svg.plan'),
     bar: q<HTMLDivElement>('.bar'),
     panel: q<HTMLElement>('.panel'),
-    onPlanChange(plan) {
+    onChange({ plan }) {
       // Rebuild the 3D view at most once per frame (dragging a corner changes the plan constantly).
       if (!pending) requestAnimationFrame(() => {
         if (pending) view.setPlan(pending);
@@ -134,8 +128,6 @@ const editor = new Editor(
       if (editorReady) {
         const known = namesByPlan.get(editor.plan);
         if (known !== undefined && nameInput.value !== known) nameInput.value = known;
-        const knownCabinets = cabinetsByPlan.get(editor.plan);
-        if (knownCabinets !== undefined) cabinets = knownCabinets;
       }
       q<HTMLButtonElement>('[data-cmd="undo"]').disabled = !canUndo;
       q<HTMLButtonElement>('[data-cmd="redo"]').disabled = !canRedo;
@@ -143,6 +135,7 @@ const editor = new Editor(
   },
   project.plan,
   project.settings,
+  project.cabinets,
 );
 editorReady = true;
 nameInput.addEventListener('input', changedForSave);
@@ -212,12 +205,9 @@ q<HTMLInputElement>('#open-file').addEventListener('change', async (e) => {
     return;
   }
   namesByPlan.set(editor.plan, nameInput.value);
-  cabinetsByPlan.set(editor.plan, cabinets);
   nameInput.value = r.project.name;
-  cabinets = r.project.cabinets;
-  editor.load(r.project.plan, r.project.settings);
+  editor.load(r.project.plan, r.project.settings, r.project.cabinets);
   namesByPlan.set(editor.plan, r.project.name);
-  cabinetsByPlan.set(editor.plan, cabinets);
   view.setPlan(editor.plan);
   view.fitToPlan(editor.plan);
   autosaveNow();

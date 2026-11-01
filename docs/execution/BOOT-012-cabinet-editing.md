@@ -4,7 +4,7 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 5". The owner can plan cabinets on any wall in the editor: pick a wall face, add, edit, reorder and delete cabinets with typed sizes, set position, snap and corner choices, see the problems, undo everything, and have cabinets cleaned up when their wall is deleted. Work record BOOT-012. |
 | Branch | `agent/claude/m2-cabinet-editing` |
-| Pull request | to be linked (draft) |
+| Pull request | #12 (draft) |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
 | Status | In progress |
 
@@ -35,14 +35,14 @@
 
 Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked · `[-]` dropped
 
-1. [~] Create this plan, push it, and open a draft PR
-2. [ ] One history for plan and cabinets:
+1. [x] Create this plan, push it, and open a draft PR (#12)
+2. [x] One history for plan and cabinets:
    - `History` becomes generic, and the editor keeps `{ plan, cabinets }`.
    - A wall change prunes cabinets on deleted walls, with a message.
    - `load(plan, settings, cabinets)`.
    - `main.ts` takes cabinets from the editor; `cabinetsByPlan` goes.
    - Existing tests pass, and the app check still passes.
-3. [ ] `src/cabinets/ops.ts`, pure cabinet edits:
+3. [~] `src/cabinets/ops.ts`, pure cabinet edits:
    - `runForFace` (find, or a new run with the start end chosen)
    - `removeRun`, `updateRun`
    - `addItem`, `updateItem`, `moveItem`, `removeItem`
@@ -58,7 +58,19 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 1: commit and push this file on `agent/claude/m2-cabinet-editing`, then open the draft PR.
+Step 3: add `startJoint` and `endJoint` to `RunGeometry` in `src/cabinets/runs.ts`. These are the centerline points at the chain's start and end.
+
+Then write `src/cabinets/ops.ts`, pure functions on `CabinetsData`:
+
+- `defaultInput(type)`, as the prototype's `newCab`
+- `runForFace(plan, data, wallId, face, click)` returns `{ data, runId }`. It uses the start-end rule in "Decisions".
+- `updateRun`, `removeRun`
+- `addItem` (at the end), `updateItem`, `moveItem` (swap with the neighbor in the same run and row), `removeItem` (line-ups to it go back to flow)
+- `setCornerOwner` and `addDiagonal`, which save the resolved corner
+
+Tests in `tests/cabinets-ops.test.ts`, including random edit sequences: after each, `parseProject(serializeProject(...))` must succeed and `planCabinets` must not throw.
+
+The preview server may still be running on port 4173. Stop it with `pgrep -f "[v]ite.*preview"`.
 
 ## Decisions made while working
 
@@ -79,7 +91,7 @@ None yet.
 
 ## Checks run
 
-None yet.
+- Step 2: typecheck passes, 327 tests pass, build passes, and `appcheck.js` (scratchpad) still shows cabinets kept through autosave, open and undo.
 
 ## Open questions for the owner
 
