@@ -1,36 +1,26 @@
-import * as THREE from 'three';
-import { APP_NAME, placeholderMessage } from './app';
+import { APP_NAME } from './app';
+import { sampleProject } from './model';
+import type { Plan } from './model';
+import { PlanView } from './view3d/plan-view';
 import './style.css';
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (!root) throw new Error('Missing #app element');
-
-const label = document.createElement('p');
-label.className = 'label';
-label.textContent = placeholderMessage();
-root.append(label);
-
-// An empty 3D scene with a floor grid: proves the 3D toolchain works end to end.
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-root.append(renderer.domElement);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf2f4f5);
-// One unit is one inch. A 20 ft x 20 ft grid with a line every foot.
-scene.add(new THREE.GridHelper(240, 20, 0x7a8a93, 0xc9d1d5));
-
-const camera = new THREE.PerspectiveCamera(50, 1, 1, 5000);
-camera.position.set(220, 180, 220);
-camera.lookAt(0, 0, 0);
-
-function resize(): void {
-  const { clientWidth: w, clientHeight: h } = renderer.domElement.parentElement ?? root!;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.render(scene, camera);
-}
-window.addEventListener('resize', resize);
-resize();
 document.title = APP_NAME;
+
+const hint = document.createElement('p');
+hint.className = 'label';
+hint.textContent = 'Sample room. Drag to orbit, right-drag or two fingers to pan, scroll or pinch to zoom.';
+root.append(hint);
+
+const view = new PlanView(root);
+view.setPlan(sampleProject().plan);
+
+/**
+ * Hook for the floor plan editor (and for trying changes from the browser console):
+ * `houseplanner.setPlan(plan)` redraws the 3D view; `houseplanner.fitToPlan(plan)` also re-aims the camera.
+ */
+(window as unknown as { houseplanner: { setPlan(plan: Plan): void; fitToPlan(plan: Plan): void } }).houseplanner = {
+  setPlan: (plan) => view.setPlan(plan),
+  fitToPlan: (plan) => view.fitToPlan(plan),
+};
