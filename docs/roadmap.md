@@ -18,8 +18,8 @@ M1 is done, in five packages (#2 to #6).
 M2, in seven packages:
 
 1. Preserve the prototype, write the cabinet rules, propose ADR-003 and the M2 requirements. Done (#7).
-2. Cabinet engine: parts, hardware and the cut list, with golden tests from the prototype. In review (#9).
-3. Sheet layouts, the optimizer, consumables and costs.
+2. Cabinet engine: parts, hardware and the cut list, with golden tests from the prototype. Done (#9).
+3. Sheet layouts, the optimizer, consumables and costs. In review (#10).
 4. Runs on walls, corners, layout and project file version 2.
 5. Cabinet editing in the plan editor.
 6. Cabinets in the 3D view.

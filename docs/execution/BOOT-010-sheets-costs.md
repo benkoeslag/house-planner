@@ -4,9 +4,9 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 3". This covers sheet layouts, the optimizer, consumables and costs (see `docs/roadmap.md`, `docs/cabinet-rules.md` → Sheet layouts and Materials, counts and cost). Work record BOOT-010. |
 | Branch | `agent/claude/m2-sheets-costs` |
-| Pull request | #10 (draft) |
+| Pull request | #10 |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
-| Status | In progress |
+| Status | Ready for review |
 
 ## Goal and done-when
 
@@ -49,18 +49,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 4. [x] `src/cabinets/optimizer.ts`: both packers, the scoring, the fixed-seed tries, the time or try budget, the signature, the acceptance rule and the area lower bound, plus a golden test
 5. [x] `src/cabinets/cutsteps.ts`: strips, crosscuts, rips and leftovers as data, plus a golden test against the prototype's text
 6. [x] `src/cabinets/costs.ts`: consumables, plywood sheets with spares, material counts, cost lines with tax, and money formatting, plus a golden test against the page's numbers
-7. [~] Docs (architecture, cabinet rules status, review queue R-018, work record, roadmap), checks, PR description, mark ready
+7. [x] Docs (architecture, cabinet rules status, review queue R-018, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 7:
-
-- `docs/architecture.md`: extend the cabinet engine section with sheets, the optimizer, cut steps and costs.
-- `docs/cabinet-rules.md` status.
-- `docs/review-queue.md`: add R-018.
-- `docs/work-record.md`: add BOOT-010.
-- `docs/roadmap.md`: package 3 in review.
-- Run all checks, fill in the PR #10 description, and mark it ready.
+None. Waiting for the owner to merge #10. Package 4 (runs on walls, corners, layout, countertop, toe kick and file version 2) waits for the owner's go-ahead.
 
 ## Decisions made while working
 
@@ -72,6 +65,8 @@ Step 7:
 - The sheets fixture was 788 KB with indentation, so it is written compact (351 KB).
 
 ## Checks run
+
+- Final: the Python copy of Test-Template passed. `npm ci`, typecheck and build pass, and **290 tests** pass (15 files). The app bundle is unchanged.
 
 - Generator ran. `prototype-cabinets.json` came out byte-identical, so it is deterministic. `prototype-sheets.json` holds 3 starter scenarios (defaults, `rotBox`, kerf 3/16 with trim 1/4) and the synthetic cases. Quick sheets are 11/4/2, the optimizer ran 41 tries in every material, plywood is $1,710, and the page total is $3,178.46.
 - Costs golden tests:
@@ -92,3 +87,4 @@ None.
 | When | Agent | Note |
 | --- | --- | --- |
 | 2026-11-01 | Claude Code (Opus 5.5) | Started |
+| 2026-11-01 | Claude Code (Opus 5.5) | Finished; PR #10 ready for review |
