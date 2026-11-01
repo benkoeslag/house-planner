@@ -17,6 +17,7 @@ const TOOLS: [Tool, string, string][] = [
   ['window', 'Window', ''],
   ['opening', 'Opening', ''],
   ['room', 'Room name', ''],
+  ['cabinets', 'Cabinets', 'C'],
 ];
 
 root.innerHTML = `

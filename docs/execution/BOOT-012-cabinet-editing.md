@@ -50,23 +50,27 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
    - default inputs per type, as the prototype's `newCab`
 
    `RunGeometry` gains its start and end joints. Tests include a random-edit test that every result still saves and opens.
-4. [~] Plan overlay: cabinet footprints and labels in `plan-canvas.ts`, from `planCabinets`, plus the Cabinets tool (toolbar button, click a wall face, hover).
-5. [ ] Cabinet panel: run header, row tabs, item cards (label, type, width, position, snap, up/down, delete), add buttons (`src/editor/cabinet-panel.ts`)
-6. [ ] Item details (type-specific fields), corner section (owner, diagonal), run actions (rename, flip, delete), problems list
-7. [ ] Browser check: build, preview, and script the flows at desktop and phone width: create runs on an L, add cabinets, type sizes, center the sink on the window, undo and redo, delete a wall then undo, save and reopen. Take screenshots and fix what looks wrong.
+4. [x] Plan overlay: cabinet footprints and labels in `plan-canvas.ts`, from `planCabinets`, plus the Cabinets tool (toolbar button, click a wall face, hover).
+5. [x] Cabinet panel: run header, row tabs, item cards (label, type, width, position, snap, up/down, delete), add buttons (`src/editor/cabinet-panel.ts`)
+6. [x] Item details (type-specific fields), corner section (owner, diagonal), run actions (rename, flip, delete), problems list
+7. [~] Browser check: build, preview, and script the flows at desktop and phone width: create runs on an L, add cabinets, type sizes, center the sink on the window, undo and redo, delete a wall then undo, save and reopen. Take screenshots and fix what looks wrong.
 8. [ ] Docs (README "Using the editor", architecture, review queue R-020, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 4: the plan overlay and the Cabinets tool.
+Step 7, browser flows. Scripts are in the session scratchpad (`m2/ui1.js` builds an L with cabinets from `kitchen-empty.json`). Still to check:
 
-- `plan-canvas.ts`: an optional `cabinets` overlay in `DrawInput`. It is a list of shapes in world coordinates (`points`, a `kind` of base, tall, upper, stove, gap or corner, a `label`, and selected or warned flags), drawn after the walls. The selected run's face gets a highlight line.
-- `editor.ts`:
-  - A new tool `cabinets`. Hover highlights the wall under the pointer.
-  - Clicking a wall uses `hitTest` (wall plus position along it). The face comes from the side of the centerline the click is on: `cross(dir, click - a) > 0` is the left face. Then `runForFace` gives the run (committed if new), selected as `{ kind: 'run', runId, row: 'base' }`.
-  - Clicking a cabinet footprint selects that cabinet's run and expands the cabinet.
-- Shapes come from `planCabinets(this.plan, this.cabinets)`, built with `runPoint(g, t, d)`. Depth: `built.D`, or the base depth for base gaps and stoves, the upper depth for upper gaps, and `input.width` for panels.
-- `main.ts`: add a toolbar button for `data-tool="cabinets"`.
+- typed fractions (`23 7/8`, `2' 6"`)
+- moving up and down, changing position (centered on the window, lined up, at a distance)
+- snap
+- the corner owner change
+- undo and redo through cabinet edits
+- deleting the south wall (cabinets removed with a message), then undo
+- save, then reopen
+- reload (autosave)
+- a phone-width screenshot (390×844)
+
+Fix anything that looks wrong. The preview server runs on port 4173; stop it with `pgrep -f "[v]ite.*preview"`.
 
 ## Decisions made while working
 
@@ -87,6 +91,7 @@ None yet.
 
 ## Checks run
 
+- Steps 4–6: first browser run (`ui1.js`, desktop 1400×860). Clicking in front of each wall creates two runs that both start at the shared corner. Added cabinets of several types, a stove space at 56″, uppers and a diagonal corner upper: 13 footprints drawn and labeled, problems outlined in red (B5 runs into the sink, as the prototype would say), no page errors. Screenshot `m2/cab-desk.png`.
 - Step 3: `tests/cabinets-ops.test.ts` passes 11 tests. These cover the start-end rule, finding an existing run, rename and flip, defaults, moving within run and row, line-ups reset on remove, run removal, corner owner and diagonal, and 25 random 40-step edit sequences, each step saving and reopening identically. My first test helper changed the result it returned; that was fixed. Full suite: 338 tests.
 - Step 2: typecheck passes, 327 tests pass, build passes, and `appcheck.js` (scratchpad) still shows cabinets kept through autosave, open and undo.
 

@@ -82,6 +82,19 @@ svg.plan { width: 100%; height: 100%; display: block; touch-action: none; user-s
 .draft-start { fill: var(--accent); }
 .draft-length { font-size: 13px; font-weight: 600; fill: var(--accent); text-anchor: middle; paint-order: stroke; stroke: #fff; stroke-width: 4px; }
 .snap { fill: none; stroke: #d97a00; stroke-width: 2; }
+.run-face { stroke: #8fb1c9; stroke-width: 3; stroke-linecap: round; }
+.run-face.selected { stroke: var(--accent); stroke-width: 4; }
+.cab { fill: #f7f3ea; stroke: #6d5a3d; stroke-width: 1.2; }
+.cab.tall { fill: #e8dcc4; }
+.cab.panel { fill: #d9c9a8; }
+.cab.gap { fill: #f4f6f7; stroke: #8a959a; stroke-dasharray: 3 2; }
+.cab.stove { fill: #e3e6e8; stroke: #5d6870; }
+.cab.upper, .cab.corner { fill: rgba(31, 94, 140, .06); stroke: #1f5e8c; stroke-dasharray: 6 3; }
+.cab.in-run { stroke-width: 1.8; }
+.cab.open { stroke: var(--accent); stroke-width: 3; }
+.cab.bad { stroke: var(--bad); }
+.cab-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: #4a3d28; pointer-events: none; }
+.cab-label.upper { fill: #1f5e8c; }
 
 /* Typed length bar */
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; border-top: 1px solid var(--line); background: var(--paper); min-height: 44px; }
@@ -105,3 +118,22 @@ select.in { width: auto; }
 .rooms { list-style: none; padding: 0; margin: 0 0 8px; }
 .rooms li { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line); }
 .label { display: none; }
+.row.wrap { flex-wrap: wrap; }
+.advice { color: #8a5a00; margin: 6px 0; font-size: .9rem; }
+.check { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.tabs { display: flex; gap: 4px; margin: 16px 0 8px; }
+.tabs button { flex: 1; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 7px 8px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.cab-list { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 6px; }
+.cab-card { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.cab-card.open { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cab-card.bad { border-color: var(--bad); }
+.cab-head { display: grid; grid-template-columns: minmax(0, 1fr) 5.5em auto; gap: 6px; align-items: center; }
+.cab-name { text-align: left; border: 0; background: none; padding: 4px 0; cursor: pointer; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cab-head .in.w { width: 100%; padding: 4px 6px; }
+.cab-btns { display: flex; gap: 2px; }
+.icon { border: 1px solid var(--line); background: var(--panel); border-radius: 5px; width: 28px; height: 28px; padding: 0; cursor: pointer; line-height: 1; }
+.cab-sub { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+.cab-details { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.add-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.add-grid .btn { padding: 7px 6px; }
