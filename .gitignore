@@ -1,0 +1,41 @@
+# Credentials and machine-local configuration
+.env
+.env.*
+*.env
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+secrets.json
+.claude/settings.local.json
+.codex/
+
+# Generated output and dependencies
+.artifacts/
+node_modules/
+dist/
+build/
+target/
+.gradle/
+.venv/
+venv/
+__pycache__/
+*.pyc
+coverage/
+*.log
+
+# Local editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Private planning and local data
+.planning/
+*.sqlite
+*.sqlite3
+local-data/

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "title": "Project Template Workflow",
+  "visibility": "PRIVATE",
+  "status": ["Backlog", "Ready", "In Progress", "Review", "Testing", "Done"],
+  "fields": [
+    { "name": "Priority", "type": "SINGLE_SELECT", "options": ["Critical", "High", "Medium", "Low"] },
+    { "name": "Type", "type": "SINGLE_SELECT", "options": ["Feature", "Bug", "Infrastructure", "Research", "Security", "Tech Debt", "Documentation"] },
+    { "name": "Area", "type": "SINGLE_SELECT", "options": ["Frontend", "Backend", "Database", "Infrastructure", "Integration", "Documentation"] }
+  ],
+  "milestone": { "source": "GitHub issue milestone", "examples": ["M0: Foundation", "M1: Proof of concept", "M2: Initial release"] },
+  "views": [
+    { "name": "Board", "layout": "BOARD", "groupBy": "Status" },
+    { "name": "Backlog", "layout": "TABLE", "filter": "status:Backlog", "columns": ["Title", "Status", "Priority", "Type", "Area", "Milestone", "Assignees"] },
+    { "name": "Active work", "layout": "TABLE", "filter": "-status:Backlog -status:Done", "columns": ["Title", "Status", "Priority", "Type", "Area", "Milestone", "Assignees"] }
+  ],
+  "workflows": {
+    "itemAdded": "Backlog",
+    "itemReopened": "Backlog",
+    "itemClosed": "Done",
+    "pullRequestMerged": "Done",
+    "autoAdd": "Configure specifically for benkoeslag/house-planner"
+  }
+}

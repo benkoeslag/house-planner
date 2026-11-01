@@ -1,0 +1,37 @@
+name: Technical debt
+description: Describe maintenance work and its concrete value.
+title: "[Tech Debt] "
+labels: ["type:tech-debt"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Current problem and cost
+      description: Identify the affected component and observed maintenance burden.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed scope
+      description: Explain the change, alternatives, and exclusions.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and validation
+      description: Describe measurable completion and compatibility checks.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and migration risks
+  - type: textarea
+    id: packages
+    attributes:
+      label: Packages and model recommendations
+      description: Optional. For work larger than a small request, list each package with its Claude and ChatGPT/Codex model and effort, and any recommended review. See AGENTS.md and docs/model-roster.md.
+    validations:
+      required: false

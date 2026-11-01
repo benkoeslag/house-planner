@@ -1,0 +1,38 @@
+name: Bug
+description: Report a reproducible failure without secrets or private data.
+title: "[Bug] "
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest reliable reproduction.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and impact
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and sanitized evidence
+      description: Version, environment, logs, or screenshots. Remove credentials and personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: packages
+    attributes:
+      label: Packages and model recommendations
+      description: Optional. For work larger than a small request, list each package with its Claude and ChatGPT/Codex model and effort, and any recommended review. See AGENTS.md and docs/model-roster.md.
+    validations:
+      required: false

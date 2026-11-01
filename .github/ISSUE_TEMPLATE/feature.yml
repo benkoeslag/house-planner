@@ -1,0 +1,46 @@
+name: Feature
+description: Propose a user-facing capability with acceptance criteria.
+title: "[Feature] "
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and user
+      description: Who needs this, and what problem do they encounter?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and exclusions
+      description: Describe the smallest useful change and what is deferred.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable outcomes, including relevant failure behavior.
+      placeholder: "- [ ] Given ..., when ..., then ..."
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Permissions, security, and audit impact
+      description: Include protected actions and data exposure; write None if inapplicable.
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone and dependencies
+      placeholder: M1; blocked by issue or decision ...
+  - type: textarea
+    id: packages
+    attributes:
+      label: Packages and model recommendations
+      description: Optional. For work larger than a small request, list each package with its Claude and ChatGPT/Codex model and effort, and any recommended review. See AGENTS.md and docs/model-roster.md.
+    validations:
+      required: false
