@@ -1,4 +1,4 @@
-// Generates tests/fixtures/prototype-cabinets.json by running the cabinet planner prototype
+// Generates tests/fixtures/prototype-cabinets.json and prototype-sheets.json by running the cabinet planner prototype
 // (docs/prototype/cabinet-planner.html, unchanged) in headless Chromium.
 //
 // The fixtures are the reference numbers for the cabinet engine's golden tests: each case is a
@@ -21,6 +21,7 @@ const { chromium } = require('playwright');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const protoPath = join(root, 'docs/prototype/cabinet-planner.html');
 const outPath = join(root, 'tests/fixtures/prototype-cabinets.json');
+const sheetsPath = join(root, 'tests/fixtures/prototype-sheets.json');
 
 // Expose the prototype's internals for reading. The source file is not modified: a copy with one
 // added line goes to a temporary directory.
@@ -29,7 +30,7 @@ const end = src.lastIndexOf('})();');
 if (end < 0) throw new Error('Unexpected prototype layout');
 const exposed =
   src.slice(0, end) +
-  'window.__proto = {buildCab, newCab, finalize, S, DEF};\n' +
+  'window.__proto = {buildCab, newCab, finalize, S, DEF, fullCompute, nest, matInfo, consumables, plyCost, matCounts, MATS_UI, MAT_ORDER, BASE, workerMain, cutPlanHtml, sigFor};\n' +
   src.slice(end);
 const dir = mkdtempSync(join(tmpdir(), 'proto-fixtures-'));
 const page = join(dir, 'proto.html');
@@ -250,6 +251,118 @@ const result = await tab.evaluate(({ CASES, STARTER, CUTLISTS }) => {
   applySettings({});
   return { defaults: plain(P.DEF), cases, starter: STARTER, cutlists };
 }, { CASES, STARTER, CUTLISTS });
+
+// ---- sheets, optimizer, cut steps, consumables and costs -----------------------------------
+// The page loads with the prototype's example list (the starter kitchen) and default settings, and
+// renders its totals; those are read from the page before anything is changed.
+await tab.reload();
+await tab.waitForFunction(() => window.__proto);
+const sheets = await tab.evaluate(async () => {
+  const P = window.__proto;
+  const plain = (x) => JSON.parse(JSON.stringify(x));
+  const text = (id) => { const e = document.getElementById(id); return e ? e.textContent : null; };
+  const page = {
+    lines: Object.fromEntries(P.MATS_UI.map((m) => [m.k, { count: text('mc-' + m.k), packs: text('ms-' + m.k), subtotal: text('mt-' + m.k), tax: text('mx-' + m.k), total: text('mz-' + m.k), hidden: document.getElementById('mb-' + m.k).hidden }])),
+    subtotal: text('mt-total'), tax: text('mx-total'), total: text('mz-total'),
+  };
+  function applySettings(s) {
+    for (const k of Object.keys(P.S)) delete P.S[k];
+    Object.assign(P.S, P.DEF, { grainFree: {} });
+    Object.assign(P.S, s || {});
+  }
+  // Cut steps as text lines: S = strip heading, C = crosscut (=> result), R = rip result, O = strip leftover, E = edge leftover.
+  function stepsText(html) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    const out = [];
+    for (const node of d.children) {
+      if (node.classList.contains('strip')) {
+        out.push('S ' + node.querySelector('.strip-h').textContent);
+        for (const li of node.querySelectorAll(':scope > ol.cuts > li')) {
+          const act = li.querySelector(':scope > .act').textContent;
+          const res = li.querySelector(':scope > .res');
+          if (res) out.push('C ' + act + ' => ' + res.textContent);
+          else {
+            out.push('C ' + act);
+            for (const r of li.querySelectorAll(':scope > ul.rips > li')) out.push('R ' + r.textContent);
+          }
+        }
+        const off = node.querySelector(':scope > .off');
+        if (off) out.push('O ' + off.textContent);
+      } else if (node.classList.contains('off')) out.push('E ' + node.textContent);
+    }
+    return out;
+  }
+  // Platform runs: base cabinets and talls on each wall, merged within 1 inch (as consumables does).
+  function platformRuns(R) {
+    const runs = [];
+    for (const k of ['L', 'R']) {
+      const iv = R.walls[k].items.filter((i) => i.row !== 'upper' && (P.BASE.has(i.x.c.type) || i.x.c.type === 'tall')).map((i) => [i.a, i.b]).sort((p, q) => p[0] - q[0]);
+      const merged = [];
+      for (const [a, b] of iv) { const m = merged[merged.length - 1]; if (m && a <= m[1] + 1) m[1] = Math.max(m[1], b); else merged.push([a, b]); }
+      for (const [a, b] of merged) runs.push(b - a);
+    }
+    return runs;
+  }
+  const groupOut = (g) => ({ num: g.num, name: g.name, mat: g.mat, L: g.L, W: g.W, qty: g.qty, rot: g.rot });
+  function optimize(R) {
+    const mats = P.MAT_ORDER.filter((m) => R.nests[m] && R.nests[m].sheets.length);
+    const jobs = mats.map((m) => {
+      const mi = R.nests[m].mat, items = [];
+      for (const g of R.byMat[m]) for (let i = 0; i < g.qty; i++) items.push({ num: g.num, L: g.L, W: g.W, rot: g.rot });
+      return { mat: m, SL: mi.L - 2 * P.S.trim, SW: mi.W - 2 * P.S.trim, kerf: P.S.kerf, items };
+    });
+    const w = new Worker(URL.createObjectURL(new Blob(['(' + P.workerMain.toString() + ')()'], { type: 'text/javascript' })));
+    // A negative budget stops after the 40 fixed tries plus the first random one: repeatable.
+    return new Promise((resolve) => {
+      w.onmessage = (e) => { if (e.data.type === 'done') { w.terminate(); resolve({ jobs, out: e.data.out }); } };
+      w.postMessage({ jobs, budget: -1 });
+    });
+  }
+  async function scenario(name, settings) {
+    applySettings(settings);
+    const R = P.fullCompute();
+    const info = new Map(R.groups.map((g) => [g.num, g]));
+    const quick = {};
+    for (const m of Object.keys(R.nests)) {
+      const N = R.nests[m];
+      quick[m] = { mat: N.mat, sheets: N.sheets, failed: N.failed, steps: N.sheets.map((sh) => stepsText(P.cutPlanHtml(sh, N.mat, info))), signature: P.sigFor(R, m) };
+    }
+    const { jobs, out } = await optimize(R);
+    const optimized = {};
+    for (const job of jobs) {
+      const o = out[job.mat], mi = R.nests[job.mat].mat;
+      const area = mi.L * mi.W;
+      const accepted = o.sheets.map((sh) => {
+        const strips = sh.strips.map((st) => ({ ...st, parts: st.segs.flatMap((sg) => sg.items) }));
+        const used = strips.reduce((a, st) => a + st.parts.reduce((b, p) => b + p.L * p.W, 0), 0);
+        return { strips, area: used, yield: used / area };
+      });
+      optimized[job.mat] = { job, raw: o.sheets, iters: o.iters, sheets: accepted, steps: accepted.map((sh) => stepsText(P.cutPlanHtml(sh, mi, info))) };
+    }
+    const kickParts = R.parts.filter((p) => p.cab === 'Kick');
+    const cabinets = R.cabs.map((x) => ({ id: x.id, type: x.c.type, placed: x.c.wall === 'L' || x.c.wall === 'R' }));
+    return plain({
+      name, settings: settings || {},
+      groups: R.groups.map(groupOut), warns: R.warns,
+      quick, optimized,
+      consumablesInput: { kickParts, cabinets, platformRuns: platformRuns(R) },
+      consumables: P.consumables(R), counts: P.matCounts(R), plyCost: P.plyCost(R),
+    });
+  }
+  const scenarios = [await scenario('starter, defaults'), await scenario('starter, all box parts ignore grain', { rotBox: true }), await scenario('starter, kerf 3/16 and trim 1/4', { kerf: 0.1875, trim: 0.25 })];
+
+  // Synthetic: parts that do not fit, a part that only fits turned, and a nearly empty strip.
+  applySettings({});
+  const part = (name, L, W, rot, qty = 1) => ({ cab: 'P1', name, mat: 'box', L, W, qty, band: { l: 0, w: 0 }, rot, note: '' });
+  const R = { cabs: [], warns: [], groups: [], byMat: {}, nests: {}, parts: [part('Too long', 100, 10, false), part('Too wide', 50, 50, true), part('Turn me', 20, 60, true), part('Strip', 90, 3, false, 3), part('Tiny', 4, 2, false, 5)] };
+  P.finalize(R);
+  const synthetic = plain({ groups: R.groups.map(groupOut), warns: R.warns, nest: R.nests.box, steps: R.nests.box.sheets.map((sh) => stepsText(P.cutPlanHtml(sh, R.nests.box.mat, new Map(R.groups.map((g) => [g.num, g]))))) });
+  applySettings({});
+  return { page, scenarios, synthetic };
+});
+writeFileSync(sheetsPath, JSON.stringify({ note: 'Generated by scripts/prototype-fixtures.mjs from docs/prototype/cabinet-planner.html. Do not edit by hand.', ...sheets }) + '\n');
+console.log(`Wrote ${sheets.scenarios.length} sheet scenarios and synthetic nest cases to ${sheetsPath}`);
 
 await browser.close();
 

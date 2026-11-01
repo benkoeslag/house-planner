@@ -2,7 +2,7 @@
 
 Status: Draft for M2. This document writes out every rule in the cabinet planner prototype ([`prototype/cabinet-planner.html`](prototype/cabinet-planner.html)), so the M2 cabinet engine can carry them over exactly. The engine's tests pin the numbers in [Worked examples](#worked-examples). These numbers came from running the prototype itself on 2026-11-01. Where this document and the prototype disagree, the prototype wins until the owner decides otherwise. Behavior the owner may want changed is listed under [Prototype quirks](#prototype-quirks-to-decide). None of it changes without the owner's say.
 
-The parts, hardware and cut list rules are implemented in `src/cabinets/` (package 2). They are checked against 91 cabinet cases and the starter kitchen's cut list recorded from the prototype itself; see [`architecture.md`](architecture.md#cabinet-engine).
+The parts, hardware, cut list, sheet layout, optimizer, cut step, consumables and cost rules are implemented in `src/cabinets/` (packages 2 and 3). They are checked against cases recorded from the prototype itself, down to the money shown on its page; see [`architecture.md`](architecture.md#cabinet-engine).
 
 How the new app places cabinets on the floor plan (runs, corners, openings, the file format) is proposed in [ADR-003](../decisions/ADR-003-cabinet-runs-and-file-v2.md). This document covers what the cabinets are made of and how a row of them is laid out along one wall.
 

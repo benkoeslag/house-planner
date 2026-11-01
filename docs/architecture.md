@@ -66,12 +66,23 @@ The editor tells `main.ts` about every change; `main.ts` rebuilds the 3D view at
 - **`settings.ts`:** every construction setting, sheet size and price, with the prototype's defaults and key names.
 - **`build.ts`:** `buildCabinet(input, settings, id)` turns one cabinet's typed inputs into parts, fronts, hardware counts and warnings.
 - **`cutlist.ts`:** `buildCutList(parts, settings, grainFree)` groups, orders and numbers the parts and applies grain choices. It also has banding and hardware totals.
+- **`sheets.ts`:** `quickLayouts` / `nestQuick` give the quick rip-first sheet layout and the problems for parts that fit on no sheet.
+- **`optimizer.ts`:** `optimizeJob` / `optimizeLayouts` run the on-demand three-stage guillotine optimizer.
+  - It takes a time budget and an injectable clock, and uses a fixed-seed random generator, so a run is repeatable.
+  - It is pure. The app will run it in a Web Worker (package 7).
+  - `layoutSignature` and `acceptOptimized` decide when a saved optimized layout is still valid and whether a new one is kept.
+- **`cutsteps.ts`:** `cutSteps` gives the readable cut steps for a sheet as data, and `cutStepsText` as plain text.
+- **`costs.ts`:** `consumables`, `plywoodCost`, `materialCounts` and `costLines` (each line's count, packs, subtotal, tax and total), plus `money`.
 
-The engine is a port of the prototype's `buildCab`, `buildDiag` and `finalize`, and its rules are in [`cabinet-rules.md`](cabinet-rules.md).
+The engine is a port of the prototype's `buildCab`, `buildDiag`, `finalize`, `nest`, the optimizer worker, `cutPlanHtml`, `consumables`, `plyCost` and the cost display. Its rules are in [`cabinet-rules.md`](cabinet-rules.md).
 
-**Golden tests.** `tests/cabinets-golden.test.ts` compares it with fixtures recorded from the unchanged prototype: 91 cabinet cases and the starter kitchen's cut list under four settings. `scripts/prototype-fixtures.mjs` regenerates the fixtures. It is a manual developer script that needs Playwright and is not part of CI. Any intended change from the prototype is an owner decision. Make it in the engine, update `cabinet-rules.md`, and change the affected fixture expectations in the same pull request, saying why.
+**Golden tests.** `tests/cabinets-golden.test.ts` and `tests/cabinets-sheets-golden.test.ts` compare it with fixtures recorded from the unchanged prototype:
+
+- 91 cabinet cases
+- the starter kitchen's cut list under four settings
+- quick and optimized sheet layouts (the optimizer for exactly 40 fixed tries plus 1 random try), cut step text, consumables and counts, under three settings
+- every money figure shown on the prototype page `scripts/prototype-fixtures.mjs` regenerates the fixtures. It is a manual developer script that needs Playwright and is not part of CI. Any intended change from the prototype is an owner decision. Make it in the engine, update `cabinet-rules.md`, and change the affected fixture expectations in the same pull request, saying why.
 
 Still to come:
 
-- sheet layouts, the optimizer, consumables and costs (package 3)
 - placement on the plan's walls and project file version 2 (package 4)

@@ -6,18 +6,7 @@ import { buildCabinet } from '../src/cabinets/build';
 import { bandInches, buildCutList } from '../src/cabinets/cutlist';
 import { cabinetSettings, DEFAULT_CABINET_SETTINGS, type CabinetSettings } from '../src/cabinets/settings';
 import type { CabinetInput } from '../src/cabinets/types';
-
-/** Rounds every number to 1e-9 so the comparison ignores floating-point noise only. */
-export function settle(v: unknown): unknown {
-  if (typeof v === 'number') return Math.round(v * 1e9) / 1e9 + 0;
-  if (Array.isArray(v)) return v.map(settle);
-  if (v && typeof v === 'object') {
-    const out: Record<string, unknown> = {};
-    for (const [k, x] of Object.entries(v)) if (x !== undefined) out[k] = settle(x);
-    return out;
-  }
-  return v;
-}
+import { settle } from './helpers';
 
 describe('cabinet settings', () => {
   it('match the prototype defaults', () => {
