@@ -45,18 +45,22 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
    - synthetic nest cases (rotation, a part too big)
    - optimizer runs with a negative time budget, which gives exactly the 40 fixed tries plus 1 random one and is repeatable
    - cut step text for each sheet
-3. [~] `src/cabinets/sheets.ts`: material info, quick layout, warnings for parts that don't fit, plus a golden test
-4. [ ] `src/cabinets/optimizer.ts`: both packers, the scoring, the fixed-seed tries, the time or try budget, the signature, the acceptance rule and the area lower bound, plus a golden test
+3. [x] `src/cabinets/sheets.ts`: material info, quick layout, warnings for parts that don't fit, plus a golden test
+4. [~] `src/cabinets/optimizer.ts`: both packers, the scoring, the fixed-seed tries, the time or try budget, the signature, the acceptance rule and the area lower bound, plus a golden test
 5. [ ] `src/cabinets/cutsteps.ts`: strips, crosscuts, rips and leftovers as data, plus a golden test against the prototype's text
 6. [ ] `src/cabinets/costs.ts`: consumables, plywood sheets with spares, material counts, cost lines with tax, and money formatting, plus a golden test against the page's numbers
 7. [ ] Docs (architecture, cabinet rules status, review queue R-018, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 3: write `src/cabinets/sheets.ts`, porting `matInfo` and `nest` (prototype lines 803–851) and the "does not fit" warnings from `finalize` (line 799).
+Step 4: write `src/cabinets/optimizer.ts`, porting `workerMain` (prototype lines 1654–1759) as `optimizeJob(job, { budgetMs, now })`. Also port:
 
-- Input: cut groups (`num`, `name`, `L`, `W`, `qty`, `rot`), the material and the settings.
-- Golden test against `tests/fixtures/prototype-sheets.json`: `scenarios[*].quick[mat]`, plus `synthetic`. The synthetic groups are built from parts with `buildCutList`.
+- `sigFor` → `layoutSignature`
+- the acceptance rule from `runOptimizer` (lines 1798–1803)
+- the area lower bound
+- the conversion of raw optimizer sheets into `SheetLayout` (parts, area and yield, lines 1793–1797)
+
+Golden test: `scenarios[*].optimized[mat]`. Build the job from `job` in the fixture, run with budget −1, and compare `raw`, `iters` and `sheets`.
 
 ## Decisions made while working
 
@@ -70,6 +74,7 @@ Step 3: write `src/cabinets/sheets.ts`, porting `matInfo` and `nest` (prototype 
 ## Checks run
 
 - Generator ran. `prototype-cabinets.json` came out byte-identical, so it is deterministic. `prototype-sheets.json` holds 3 starter scenarios (defaults, `rotBox`, kerf 3/16 with trim 1/4) and the synthetic cases. Quick sheets are 11/4/2, the optimizer ran 41 tries in every material, plywood is $1,710, and the page total is $3,178.46.
+- Quick layout golden tests: 10 pass (3 scenarios × 3 materials, plus the synthetic case with its "does not fit" warnings).
 
 ## Open questions for the owner
 
