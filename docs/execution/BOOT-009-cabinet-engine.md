@@ -4,9 +4,9 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Go ahead with package 2". This is the cabinet engine: parts, hardware and the cut list, with golden tests from the prototype (see `docs/roadmap.md`, `docs/cabinet-rules.md`). Work record BOOT-009. |
 | Branch | `agent/claude/m2-cabinet-engine` |
-| Pull request | #9 (draft) |
+| Pull request | #9 |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
-| Status | In progress |
+| Status | Ready for review |
 
 ## Goal and done-when
 
@@ -33,19 +33,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 5. [x] `src/cabinets/build.ts`: blind base, blind upper, diagonal upper, gables, tall, open shelf, open spaces, custom parts
 6. [x] `src/cabinets/cutlist.ts`: grain, grouping keys, order, numbering, banding length, hardware totals
 7. [x] Tests: golden comparison with the fixtures, worked examples, and cut list behavior
-8. [~] Docs (architecture, cabinet rules, review queue R-017, work record, roadmap), checks, PR description, mark ready
+8. [x] Docs (architecture, cabinet rules, review queue R-017, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 8:
-
-- `docs/architecture.md`: add a cabinet engine section.
-- `docs/cabinet-rules.md` status: mention the engine and the tests.
-- `docs/review-queue.md`: add R-017 with the package 2 challenge.
-- `docs/work-record.md`: add BOOT-009.
-- `docs/roadmap.md`: package 2 done, waiting for merge.
-- `AGENTS.md` checks table: note the fixture generator.
-- Then run all checks, fill in the PR #9 description, and mark it ready.
+None. Waiting for the owner to merge #9. The next package (3: sheet layouts, optimizer, consumables, costs) waits for the owner's go-ahead.
 
 ## Decisions made while working
 
@@ -66,6 +58,7 @@ Step 8:
 - Fixture generator ran: 91 cabinet cases and 4 cut lists, from the unchanged prototype. The starter cut list has 85 groups and 4027.10 in of banding.
 - `tests/cabinets-golden.test.ts`: 92 pass. All 91 prototype cases match to 1e-9, including warning text, plus the settings defaults. A deliberate mutation (hinge threshold, drawer box rounding) made them fail, so the test does catch differences. Reverted.
 - Cut list golden tests: all 4 starter kitchen cut lists match (default, `rotBox`, 1/16″ rounding, two ticked lines). `tests/cabinets.test.ts` pins the worked examples and cut list behavior. Full run: 14 files, 249 tests pass. Typecheck and build pass.
+- Final checks: the Python copy of Test-Template passed (manifest files and every relative link). `npm ci`, typecheck, 249 tests and build all pass. The app bundle is unchanged: the app does not import the engine yet, and the fixtures are test-only.
 
 ## Open questions for the owner
 
@@ -76,3 +69,4 @@ None.
 | When | Agent | Note |
 | --- | --- | --- |
 | 2026-11-01 | Claude Code (Opus 5.5) | Started |
+| 2026-11-01 | Claude Code (Opus 5.5) | Finished; PR #9 ready for review |

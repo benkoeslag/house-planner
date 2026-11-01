@@ -151,6 +151,7 @@ The stack is a TypeScript browser app (see [`ADR-001`](decisions/ADR-001-applica
 | Tests | `npm test` | all tests pass |
 | Build | `npm run build` | build completes |
 | Visual changes | `npm run build`, serve `dist/` (for example `npx vite preview`), then look at it in a browser | looks right at desktop and phone width |
+| Prototype fixtures (only when adding golden cases) | `node scripts/prototype-fixtures.mjs` (needs Playwright with Chromium) | rewrites `tests/fixtures/prototype-cabinets.json`; the golden tests still pass |
 
 Add any new check (such as lint) to this table in the same pull request that introduces it.
 

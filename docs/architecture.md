@@ -58,3 +58,20 @@ The editor tells `main.ts` about every change; `main.ts` rebuilds the 3D view at
 ## Saving
 
 `src/storage.ts` holds the browser-storage logic (autosave, restore, and the backup of an unreadable autosave) behind a small interface so tests can supply a fake. `src/main.ts` runs the autosave timer, **Save file** (downloads `serializeProject` output through a temporary link) and **Open file** (reads the file, runs `parseProject`, and loads it as an undoable change). File format rules are in `docs/data-model.md` and ADR-002.
+
+## Cabinet engine
+
+`src/cabinets/` (M2 package 2) is plain functions with no UI and no plan geometry, so it can be tested exactly.
+
+- **`settings.ts`:** every construction setting, sheet size and price, with the prototype's defaults and key names.
+- **`build.ts`:** `buildCabinet(input, settings, id)` turns one cabinet's typed inputs into parts, fronts, hardware counts and warnings.
+- **`cutlist.ts`:** `buildCutList(parts, settings, grainFree)` groups, orders and numbers the parts and applies grain choices. It also has banding and hardware totals.
+
+The engine is a port of the prototype's `buildCab`, `buildDiag` and `finalize`, and its rules are in [`cabinet-rules.md`](cabinet-rules.md).
+
+**Golden tests.** `tests/cabinets-golden.test.ts` compares it with fixtures recorded from the unchanged prototype: 91 cabinet cases and the starter kitchen's cut list under four settings. `scripts/prototype-fixtures.mjs` regenerates the fixtures. It is a manual developer script that needs Playwright and is not part of CI. Any intended change from the prototype is an owner decision. Make it in the engine, update `cabinet-rules.md`, and change the affected fixture expectations in the same pull request, saying why.
+
+Still to come:
+
+- sheet layouts, the optimizer, consumables and costs (package 3)
+- placement on the plan's walls and project file version 2 (package 4)
