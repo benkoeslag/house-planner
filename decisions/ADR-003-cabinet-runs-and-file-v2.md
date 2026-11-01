@@ -1,8 +1,8 @@
 # ADR-003: Cabinet runs on the plan, and project file version 2
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-01
-- Decision maker: Repository owner (`benkoeslag`)
+- Decision maker: Repository owner (`benkoeslag`); accepted by approving M2 package 4 on 2026-11-01
 - Issue / PR: M2 package 1 (see `docs/roadmap.md` and `docs/work-record.md` BOOT-007)
 - Supersedes / superseded by: None. Extends [ADR-002](ADR-002-project-file-format.md).
 
@@ -74,6 +74,24 @@ Use **runs on wall faces**.
 - **Reproducibility.** The optimizer's result depends on a time budget, so it is not exactly reproducible. Saving the accepted layout keeps what the owner cut from. A stale layout (its signature no longer matches) is shown as stale and not used.
 - **Prototype quirks.** The quirks listed in `cabinet-rules.md` (for example the corner countertop counted on both walls) are kept until the owner decides. Each decision updates that document and its tests.
 - **The prototype file** stays in `docs/prototype/`, unchanged, as the reference.
+
+## Implementation notes (M2 package 4, 2026-11-01)
+
+These refine the decision without changing it. The owner accepted this ADR by approving package 4.
+
+- **Corner style comes from the cabinets.**
+  - A blind cabinet first on either run makes a blind corner.
+  - A diagonal upper is an item placed in the corner (`cornerId`).
+  - The saved corner keeps only its two runs and the owner, so it can never disagree with the cabinets.
+- **Labels are numbered in list order.** B1, U1 and so on follow the single item list, as the prototype numbers them, rather than "by run, then list order". This keeps the starter kitchen's labels identical to the prototype's.
+- **The stove space is an item of kind `stove`.**
+  - It takes its width plus the countertop overhang on each side, and its `at` position is where that starts.
+  - In layout it acts exactly like the prototype's stove opening: cabinets in list order jump past it, and fixed pieces that overlap it are flagged.
+  - It gets no countertop and no toe kick.
+- **A run spans the whole straight face** through the walls it was created on, so splitting a wall needs no update. A wall meeting the run's face, whether split there or not, ends the run.
+- **One corner per run, at its start**, as in the prototype. U-shaped kitchens, with a corner at both ends of a run, are a later change.
+- **`sheetLayouts` is a list** of accepted layouts, one per material, each with its signature. An empty list means none, rather than `null`.
+- **References to the plan may dangle in the file.** A run whose walls were deleted, or an item centered on a deleted window, is kept and reported by the layout. Refusing such a file would make an ordinary wall deletion turn the autosave unreadable. References inside the cabinets section are checked strictly.
 
 ## Validation and references
 

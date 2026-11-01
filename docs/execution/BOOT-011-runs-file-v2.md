@@ -4,9 +4,9 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 4". This implements ADR-003: cabinet runs on wall faces, corners found from the plan, the prototype's wall layout per run, the countertop, toe kick and platform runs, and project file version 2 with a migration from version 1. Work record BOOT-011. |
 | Branch | `agent/claude/m2-runs-file-v2` |
-| Pull request | #11 (draft) |
+| Pull request | #11 |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
-| Status | In progress |
+| Status | Ready for review |
 
 ## Goal and done-when
 
@@ -45,7 +45,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 7. [x] `src/cabinets/layout.ts`: countertop runs, toe kick parts, platform runs. Add `planCabinets(plan, data, settings)`, which builds every item, lays out runs, and gathers parts and warnings.
 8. [x] Golden layout tests: each scenario drawn as an L-shaped plan with runs, a corner, a window opening and a stove item, compared with the prototype
 9. [x] Project file v2: `Project.cabinets`, serialize (`settings.cabinets` plus top-level `cabinets`), validation with located messages, migration 1→2, and `pruneCabinets` for runs whose walls are gone. Update the `main.ts` carry-through, `sample.ts` and the storage and file tests.
-10. [~] Docs:
+10. [x] Docs:
     - `data-model.md` for v2
     - ADR-003 implementation notes
     - `cabinet-rules.md` changes (stove item, runs)
@@ -55,13 +55,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 
 ## Next action
 
-Step 10:
-
-- `docs/data-model.md`: version 2 entities and the cabinets section, migration 1→2, and what may dangle.
-- ADR-003: an implementation notes section with the decisions above (corner style from cabinets, labels in list order, stove as an item, runs over the whole straight face, one corner per run at its start, `sheetLayouts` as a list, lenient plan references).
-- `docs/cabinet-rules.md`: the "runs on the plan" changes, and the stove as an item with its `at` start including the overhang.
-- Architecture, review queue R-019, work record BOOT-011, roadmap.
-- Then run all checks, fill in the PR #11 description, and mark it ready.
+None. Waiting for the owner to merge #11. Package 5 (cabinet editing in the plan editor) waits for the owner's go-ahead.
 
 ## Decisions made while working
 
@@ -85,6 +79,8 @@ Step 10:
 
 ## Checks run
 
+- Final: the Python copy of Test-Template passed. `npm ci`, typecheck and build pass, and **327 tests** pass (19 files). The bundle is 646 KB, up 8 KB because the file reader now knows the cabinet settings.
+
 - Step 9: file v2 tests pass: writing, an exact round trip of the starter kitchen (it lays out the same), a version 1 file opened unchanged, defaults filled, zeros accepted, 19 located-error cases, dangling plan references kept and reported, pruning, and autosave. Full suite: 19 files, 327 tests. App check in headless Chromium against the built app: a v2 autosave keeps its cabinets after a rename, opening a v1 file gives empty cabinets, and undo brings the 16 cabinets back. No page errors.
 - Steps 6–8: `planCabinets` matches all 12 prototype layout scenarios on a real L plan: row starts and ends, every item's position and fixed flag, gaps, window center and sink offset, countertop runs, all warnings in order with exact text, toe kick strips, platform runs and corner gaps. A mutation check (packing direction, countertop merge distance) failed 10 of 12. Full suite: 15 files pass (see the totals in the final checks).
 - Step 5: the generator wrote 12 layout scenarios. `prototype-cabinets.json` and `prototype-sheets.json` are unchanged.
@@ -101,3 +97,4 @@ None blocking. D-003 and D-004 are still open in the review queue.
 | When | Agent | Note |
 | --- | --- | --- |
 | 2026-11-01 | Claude Code (Opus 5.5) | Started |
+| 2026-11-01 | Claude Code (Opus 5.5) | Finished; PR #11 ready for review |

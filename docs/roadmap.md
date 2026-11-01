@@ -19,8 +19,8 @@ M2, in seven packages:
 
 1. Preserve the prototype, write the cabinet rules, propose ADR-003 and the M2 requirements. Done (#7).
 2. Cabinet engine: parts, hardware and the cut list, with golden tests from the prototype. Done (#9).
-3. Sheet layouts, the optimizer, consumables and costs. In review (#10).
-4. Runs on walls, corners, layout and project file version 2.
+3. Sheet layouts, the optimizer, consumables and costs. Done (#10).
+4. Runs on walls, corners, layout and project file version 2. In review (#11).
 5. Cabinet editing in the plan editor.
 6. Cabinets in the 3D view.
 7. Cut list, sheets and cost panels.

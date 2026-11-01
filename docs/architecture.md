@@ -83,6 +83,16 @@ The engine is a port of the prototype's `buildCab`, `buildDiag`, `finalize`, `ne
 - quick and optimized sheet layouts (the optimizer for exactly 40 fixed tries plus 1 random try), cut step text, consumables and counts, under three settings
 - every money figure shown on the prototype page `scripts/prototype-fixtures.mjs` regenerates the fixtures. It is a manual developer script that needs Playwright and is not part of CI. Any intended change from the prototype is an owner decision. Make it in the engine, update `cabinet-rules.md`, and change the affected fixture expectations in the same pull request, saying why.
 
+**On the plan** (package 4):
+
+- **`runs.ts`:** `runGeometry` finds the straight face a run follows, its start corner, direction, room side, length and openings.
+- **`corners.ts`:** `resolveCorners` finds inside corners between runs and keeps the owner choice.
+- **`layout.ts`:** `planCabinets(plan, data)` builds every item, lays out every run (the prototype's wall layout, per run), and gives the countertop, toe kick strips, platform runs, all parts and all warnings.
+- **`project.ts`:** holds the saved cabinet data and `pruneCabinets`.
+- **The project file** (version 2) carries the cabinets, and `main.ts` keeps them through save, autosave, open and undo across an open.
+
 Still to come:
 
-- placement on the plan's walls and project file version 2 (package 4)
+- cabinet editing in the plan editor (package 5)
+- cabinets in 3D (package 6)
+- the cut list, sheet and cost panels, and the optimizer in a Web Worker (package 7)
