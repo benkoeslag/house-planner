@@ -53,24 +53,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 4. [x] Plan overlay: cabinet footprints and labels in `plan-canvas.ts`, from `planCabinets`, plus the Cabinets tool (toolbar button, click a wall face, hover).
 5. [x] Cabinet panel: run header, row tabs, item cards (label, type, width, position, snap, up/down, delete), add buttons (`src/editor/cabinet-panel.ts`)
 6. [x] Item details (type-specific fields), corner section (owner, diagonal), run actions (rename, flip, delete), problems list
-7. [~] Browser check: build, preview, and script the flows at desktop and phone width: create runs on an L, add cabinets, type sizes, center the sink on the window, undo and redo, delete a wall then undo, save and reopen. Take screenshots and fix what looks wrong.
-8. [ ] Docs (README "Using the editor", architecture, review queue R-020, work record, roadmap), checks, PR description, mark ready
+7. [x] Browser check: build, preview, and script the flows at desktop and phone width: create runs on an L, add cabinets, type sizes, center the sink on the window, undo and redo, delete a wall then undo, save and reopen. Take screenshots and fix what looks wrong.
+8. [~] Docs (README "Using the editor", architecture, review queue R-020, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 7, browser flows. Scripts are in the session scratchpad (`m2/ui1.js` builds an L with cabinets from `kitchen-empty.json`). Still to check:
+Step 8:
 
-- typed fractions (`23 7/8`, `2' 6"`)
-- moving up and down, changing position (centered on the window, lined up, at a distance)
-- snap
-- the corner owner change
-- undo and redo through cabinet edits
-- deleting the south wall (cabinets removed with a message), then undo
-- save, then reopen
-- reload (autosave)
-- a phone-width screenshot (390×844)
+- `README.md` "Using the editor": a Cabinets bullet.
+- `docs/architecture.md`: the editor section gets cabinet editing.
+- `docs/review-queue.md`: add R-020.
+- `docs/work-record.md`: add BOOT-012.
+- `docs/roadmap.md`.
+- Then checks, the PR #12 description, and mark it ready.
 
-Fix anything that looks wrong. The preview server runs on port 4173; stop it with `pgrep -f "[v]ite.*preview"`.
+Stop the preview server with `pgrep -f "[v]ite.*preview"`.
 
 ## Decisions made while working
 
@@ -87,10 +84,21 @@ Fix anything that looks wrong. The preview server runs on port 4173; stop it wit
 
 ## Tried and did not work
 
+- The first flow script read the autosave before its half-second delay and saw nothing; adding a wait fixed it. A JSON-text comparison after reopening differed only by key order; a structural comparison is equal.
+
 None yet.
 
 ## Checks run
 
+- Step 7: full flows (`m2/ui2.js`, `m2/ui3.js`), all with no page errors:
+  - named runs, typed `13 7/8` and `1' 8 15/16"`
+  - a sink base auto-centered on the window, the dishwasher set to follow it, moved up and down within its row
+  - snap left, an upper centered on the sink, a diagonal corner upper, the corner owner changed
+  - undo ×3 and redo ×3 restore exactly
+  - deleting the south wall removed its run and 5 cabinets with a message, and undo restored them exactly
+  - reload (autosave) and save then reopen are identical (structural comparison)
+  - desktop and phone (390×844) screenshots
+  - Fixed: upper labels overlapped base labels; uppers now label near the wall and floor cabinets toward the front.
 - Steps 4–6: first browser run (`ui1.js`, desktop 1400×860). Clicking in front of each wall creates two runs that both start at the shared corner. Added cabinets of several types, a stove space at 56″, uppers and a diagonal corner upper: 13 footprints drawn and labeled, problems outlined in red (B5 runs into the sink, as the prototype would say), no page errors. Screenshot `m2/cab-desk.png`.
 - Step 3: `tests/cabinets-ops.test.ts` passes 11 tests. These cover the start-end rule, finding an existing run, rename and flip, defaults, moving within run and row, line-ups reset on remove, run removal, corner owner and diagonal, and 25 random 40-step edit sequences, each step saving and reopening identically. My first test helper changed the result it returned; that was fixed. Full suite: 338 tests.
 - Step 2: typecheck passes, 327 tests pass, build passes, and `appcheck.js` (scratchpad) still shows cabinets kept through autosave, open and undo.

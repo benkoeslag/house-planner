@@ -16,6 +16,8 @@ export interface CabinetShape {
   points: Point[];
   kind: ShapeKind;
   label: string;
+  /** Where the label goes: floor cabinets toward their front, uppers near the wall, so they do not overlap. */
+  labelAt: Point;
   itemId: string;
   /** The run it stands on; a corner cabinet names one of its corner's runs. */
   runId: string;
@@ -62,10 +64,12 @@ export function cabinetOverlay(planned: CabinetPlan, s: CabinetSettings): Cabine
     faces.push({ runId: g.run.id, from: runPoint(g, 0), to: runPoint(g, g.length) });
     for (const p of [...w.items, ...w.stoves]) {
       const d = depthOf(p, s);
+      const kind = kindOf(p);
       shapes.push({
         points: [runPoint(g, p.a), runPoint(g, p.b), runPoint(g, p.b, d), runPoint(g, p.a, d)],
-        kind: kindOf(p),
+        kind,
         label: p.label,
+        labelAt: runPoint(g, (p.a + p.b) / 2, kind === 'upper' ? d * 0.4 : d * 0.75),
         itemId: p.item.id,
         runId: g.run.id,
         bad: bad.has(p.label),
@@ -81,7 +85,7 @@ export function cabinetOverlay(planned: CabinetPlan, s: CabinetSettings): Cabine
     const O = r1.origin;
     const a = add(O, scale(r1.u, L));
     const b = add(O, scale(r2.u, L));
-    shapes.push({ points: [O, a, add(a, scale(r1.n, d)), add(b, scale(r2.n, d)), b], kind: 'corner', label: diag.label, itemId: diag.item.id, runId: r1.run.id, bad: bad.has(diag.label) });
+    shapes.push({ points: [O, a, add(a, scale(r1.n, d)), add(b, scale(r2.n, d)), b], kind: 'corner', label: diag.label, labelAt: add(O, add(scale(r1.u, L * 0.3), scale(r2.u, L * 0.3))), itemId: diag.item.id, runId: r1.run.id, bad: bad.has(diag.label) });
   }
   return { shapes, faces };
 }

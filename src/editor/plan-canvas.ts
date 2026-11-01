@@ -119,7 +119,7 @@ export function drawPlan(st: DrawState): string {
       const xs = q.map((p) => p.x);
       const ys = q.map((p) => p.y);
       if (Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) < 14) continue;
-      const c = centroid(q);
+      const c = S(sh.labelAt);
       out.push(`<text class="cab-label${upper(sh.kind) ? ' upper' : ''}" x="${r1(c.x)}" y="${r1(c.y)}" dy="0.35em">${esc(sh.label)}</text>`);
     }
   }
