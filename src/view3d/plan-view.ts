@@ -8,8 +8,8 @@ import { buildWalls, planBounds } from './pieces';
  * Simple 3D view of a plan. One 3D unit is one inch. Plan x is 3D x, plan y is 3D -z
  * (north is away from the viewer), and up is 3D y.
  *
- * Call `setPlan` whenever the plan changes; the view rebuilds its meshes and keeps the camera
- * where the owner left it, except the first time a non-empty plan is shown.
+ * Call `setPlan` whenever the plan changes; the view rebuilds its meshes. The camera keeps framing
+ * the whole plan until the owner orbits, pans or zooms; after that it stays where they left it.
  */
 export class PlanView {
   private readonly renderer: THREE.WebGLRenderer;
@@ -18,7 +18,8 @@ export class PlanView {
   private readonly controls: OrbitControls;
   private readonly content = new THREE.Group();
   private readonly resizeObserver: ResizeObserver;
-  private fitted = false;
+  /** Set once the owner moves the 3D camera; until then the view keeps framing the whole plan. */
+  private userMoved = false;
   private frame = 0;
 
   constructor(private readonly container: HTMLElement) {
@@ -38,6 +39,9 @@ export class PlanView {
     this.controls.enableDamping = false;
     this.controls.maxPolarAngle = Math.PI / 2 - 0.02; // keep the camera above the floor
     this.controls.addEventListener('change', () => this.requestRender());
+    this.controls.addEventListener('start', () => {
+      this.userMoved = true;
+    });
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -80,18 +84,16 @@ export class PlanView {
 
     this.content.add(this.grid(plan));
 
-    if (!this.fitted) {
-      const b = planBounds(plan);
-      if (b) {
-        this.fit(b.min, b.max, b.height);
-        this.fitted = true;
-      }
-    }
+    // Keep the whole plan in view as it grows, until the owner moves the camera themselves.
+    const b = planBounds(plan);
+    if (!b) this.userMoved = false;
+    else if (!this.userMoved) this.fit(b.min, b.max, b.height);
     this.requestRender();
   }
 
   /** Points the camera at the given plan from the south-east, close enough to fill the view. */
   fitToPlan(plan: Plan): void {
+    this.resize(); // the container may have just been shown, so measure it first
     const b = planBounds(plan);
     if (b) this.fit(b.min, b.max, b.height);
   }
