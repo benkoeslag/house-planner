@@ -4,9 +4,9 @@
 | --- | --- |
 | Task | Owner, 2026-11-01: "Merged, go ahead with package 5". The owner can plan cabinets on any wall in the editor: pick a wall face, add, edit, reorder and delete cabinets with typed sizes, set position, snap and corner choices, see the problems, undo everything, and have cabinets cleaned up when their wall is deleted. Work record BOOT-012. |
 | Branch | `agent/claude/m2-cabinet-editing` |
-| Pull request | #12 (draft) |
+| Pull request | #12 |
 | Started | 2026-11-01, Claude Code (Opus 5.5) |
-| Status | In progress |
+| Status | Ready for review |
 
 ## Goal and done-when
 
@@ -54,20 +54,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked ·
 5. [x] Cabinet panel: run header, row tabs, item cards (label, type, width, position, snap, up/down, delete), add buttons (`src/editor/cabinet-panel.ts`)
 6. [x] Item details (type-specific fields), corner section (owner, diagonal), run actions (rename, flip, delete), problems list
 7. [x] Browser check: build, preview, and script the flows at desktop and phone width: create runs on an L, add cabinets, type sizes, center the sink on the window, undo and redo, delete a wall then undo, save and reopen. Take screenshots and fix what looks wrong.
-8. [~] Docs (README "Using the editor", architecture, review queue R-020, work record, roadmap), checks, PR description, mark ready
+8. [x] Docs (README "Using the editor", architecture, review queue R-020, work record, roadmap), checks, PR description, mark ready
 
 ## Next action
 
-Step 8:
-
-- `README.md` "Using the editor": a Cabinets bullet.
-- `docs/architecture.md`: the editor section gets cabinet editing.
-- `docs/review-queue.md`: add R-020.
-- `docs/work-record.md`: add BOOT-012.
-- `docs/roadmap.md`.
-- Then checks, the PR #12 description, and mark it ready.
-
-Stop the preview server with `pgrep -f "[v]ite.*preview"`.
+None. Waiting for the owner to merge #12. Package 6 (cabinets in 3D) waits for the owner's go-ahead.
 
 ## Decisions made while working
 
@@ -89,6 +80,8 @@ Stop the preview server with `pgrep -f "[v]ite.*preview"`.
 None yet.
 
 ## Checks run
+
+- Final: the Python copy of Test-Template passed. `npm ci`, typecheck and build pass, and **338 tests** pass (20 files). The bundle is 696 KB, up 50 KB now that the cabinet engine is used by the app.
 
 - Step 7: full flows (`m2/ui2.js`, `m2/ui3.js`), all with no page errors:
   - named runs, typed `13 7/8` and `1' 8 15/16"`
@@ -112,3 +105,4 @@ None.
 | When | Agent | Note |
 | --- | --- | --- |
 | 2026-11-01 | Claude Code (Opus 5.5) | Started |
+| 2026-11-01 | Claude Code (Opus 5.5) | Finished; PR #12 ready for review |

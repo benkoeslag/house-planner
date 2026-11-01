@@ -27,6 +27,12 @@ The owner's existing SketchUp model is not imported; the house will be redrawn i
 - **Doors, windows, openings:** pick the tool and click on a wall, then type the distance from the inside corner, width, height and sill. Problems (into a corner, overlapping, too tall) show in red.
 - **Rooms** are found automatically; use **Room name** and click inside one to name it. Areas are inside the walls.
 - **Saving:** the plan is autosaved in this browser a moment after every change and restored when you come back. **Save file** downloads a `.house-planner.json` file named after the project; keep these as your real backups. **Open file** loads one; if the file is damaged or from a newer version, you get a plain message and nothing changes. Opening a file can be undone.
+- **Cabinets:**
+  - Pick **Cabinets** (C), then click a wall, or the floor just in front of it, to start a cabinet run on that face. Positions are measured from the corner shown in blue; **Measure from the other end** flips it.
+  - Add cabinets to the **Base row** or **Upper row**. New ones go at the end; move them with the arrows. Type widths and sizes as lengths (`23 7/8`, `2' 6"`).
+  - Open a cabinet to set its details, its position (in list order, centered on a window or door, at a distance, lined up with a base cabinet, or right after the fixed piece above) and which way it pulls.
+  - Where two runs meet at a corner, choose whose cabinets go into it, and add a diagonal corner upper if you want one.
+  - Problems (overlaps, gaps, running past the wall) show in red on the plan and in the panel. Deleting a wall removes the cabinets on it; undo brings them back.
 - **View:** drag empty space to pan, scroll or pinch to zoom, **Fit** to see everything. Undo and redo with the buttons or Ctrl+Z / Ctrl+Shift+Z. On a phone, switch between Plan and 3D at the top right.
 
 ## Start here

@@ -48,10 +48,12 @@ Local Git/VS Code operations are documented in `local-development.md`. Applicati
 | --- | --- |
 | `snap.ts` | Snapping a pointer to wall ends, walls or the inch grid; 90-degree angle snapping; where the wall being drawn ends (typed length and angle win over the pointer) |
 | `ops.ts` | Editing operations on the plan: placing walls with proper junctions (ends snap to wall ends, an end in the middle of a wall splits it, crossing walls are split at the crossing), changing a wall's length (walls joined at the moved end follow), moving corners, placing and changing openings measured from the inside corners, naming rooms |
-| `history.ts` | Undo and redo. Plans are immutable, so history keeps references |
+| `history.ts` | Undo and redo of any immutable value. The editor keeps the plan and the cabinets together in it, so walls and cabinets undo as one history |
 | `hit.ts` | What is under the pointer: a corner, a door or window, or a wall |
 | `plan-canvas.ts` | Draws the plan as SVG in screen coordinates: grid, floors, walls, openings with door swings, face lengths on both sides of each wall, room names and areas, the wall being drawn, and snap markers |
-| `editor.ts` | Tools, pointer and keyboard handling (mouse, touch and pinch), the typed-length bar, and the properties panel |
+| `editor.ts` | Tools, pointer and keyboard handling (mouse, touch and pinch), the typed-length bar, and the properties panel. A plan change that deletes the walls under a cabinet run removes the run and its cabinets in the same undoable step. |
+| `cabinet-overlay.ts` | Cabinet footprints and run faces on the plan, from the cabinet layout; which cabinet or wall face is under the pointer (a face is picked within 36″ in front of it) |
+| `cabinet-panel.ts` | The cabinet run panel (run, corner, base and upper rows, each cabinet's sizes, position and snap, add buttons, problems) and its handlers, which apply the pure edits in `src/cabinets/ops.ts` |
 
 The editor tells `main.ts` about every change; `main.ts` rebuilds the 3D view at most once per animation frame. The 2D view keeps its top-left corner still when its size changes, so the plan never shifts under the pointer while drawing.
 
